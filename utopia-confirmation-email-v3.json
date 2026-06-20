@@ -1,0 +1,525 @@
+{
+  "name": "Utopia Deli – Confirmation Email v3",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "utopia-confirmation-email",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "webhook-frontend-1",
+      "name": "Frontend Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [-1200, 0],
+      "webhookId": "utopia-confirmation-email"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "utopia-square-webhook",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "webhook-square-1",
+      "name": "Square Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [-1200, 400],
+      "webhookId": "utopia-square-webhook"
+    },
+    {
+      "parameters": {
+        "language": "JavaScript",
+        "jsCode": "const body = $json.body || $json;\n\n// Frontend payload: { order_id, source, page_url, triggered_at }\nreturn [{\n  json: {\n    trigger_source: 'frontend',\n    order_id: body.order_id || '',\n    source_type: body.source || 'unknown',\n    triggered_at: body.triggered_at || new Date().toISOString(),\n    payment_id: '',\n    receipt_url: ''\n  }\n}];"
+      },
+      "id": "normalize-frontend-1",
+      "name": "Normalize Frontend",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [-1000, 0]
+    },
+    {
+      "parameters": {
+        "language": "JavaScript",
+        "jsCode": "const body = $json.body || $json;\n\nconst eventType = body.type || '';\nconst data = body.data || {};\n\n// Square v2020 payload: data.object.payment\nconst payment = data.object?.payment || data.object || data.payment || {};\n\n// Only process payment.updated\nif (eventType !== 'payment.updated') {\n  return [{ json: { skip: true, reason: 'Not payment.updated' } }];\n}\n\nif (payment.status !== 'COMPLETED') {\n  return [{ json: { skip: true, reason: 'Payment not completed', actual_status: payment.status } }];\n}\n\n// Extract our order_id from reference_id\nvar orderId = payment.reference_id || '';\nvar squareOrderId = payment.order_id || '';\n\n// Fallback to Square order_id\nif (!orderId && squareOrderId) {\n  orderId = squareOrderId;\n}\n\n// Square webhook does NOT include buyer email or line items\n// We MUST lookup from DB\nvar totalCents = payment.total_money?.amount || payment.amount_money?.amount || 0;\n\nreturn [{\n  json: {\n    trigger_source: 'square',\n    order_id: orderId,\n    square_order_id: squareOrderId,\n    source_type: 'square-webhook',\n    triggered_at: new Date().toISOString(),\n    payment_id: payment.id || '',\n    receipt_url: payment.receipt_url || '',\n    total_cents: totalCents\n  }\n}];"
+      },
+      "id": "normalize-square-1",
+      "name": "Normalize Square",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [-1000, 400]
+    },
+    {
+      "parameters": {
+        "language": "JavaScript",
+        "jsCode": "// Route both triggers to same output\n// No merge needed - just pass through\nreturn [{ json: $json }];"
+      },
+      "id": "route-1",
+      "name": "Route Trigger",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [-800, 200]
+    },
+    {
+      "parameters": {
+        "language": "JavaScript",
+        "jsCode": "return [{ json: { order_id: $json.order_id } }];"
+      },
+      "id": "prep-db-1",
+      "name": "Prep DB Lookup",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [-600, 200]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT order_id, email_sent, customer_email, customer_name, cart_json, subtotal_cents, tax_cents, total_cents, source FROM orders WHERE order_id = '{{$json.order_id}}' LIMIT 1;"
+      },
+      "id": "sqlite-lookup-1",
+      "name": "Lookup Order in DB",
+      "type": "n8n-nodes-base.sqlite",
+      "typeVersion": 2,
+      "position": [-400, 200],
+      "credentials": {
+        "sqlite": {
+          "id": "utopia-orders",
+          "name": "Utopia Orders DB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "language": "JavaScript",
+        "jsCode": "// SQLite returns array of rows\nconst rows = $json;\n\nif (!rows || rows.length === 0) {\n  return [{ json: { error: 'NOT_FOUND', order_id: $json.order_id } }];\n}\n\n// Extract first row\nconst row = rows[0];\n\nreturn [{ json: row }];"
+      },
+      "id": "extract-row-1",
+      "name": "Extract DB Row",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [-200, 200]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "condition-0",
+              "leftValue": "={{$json.error}}",
+              "rightValue": "NOT_FOUND",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ]
+        }
+      },
+      "id": "if-found-1",
+      "name": "Order Exists?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [0, 200]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "condition-1",
+              "leftValue": "={{ Number($json.email_sent) }}",
+              "rightValue": "1",
+              "operator": {
+                "type": "number",
+                "operation": "notEquals"
+              }
+            }
+          ]
+        }
+      },
+      "id": "if-not-sent-1",
+      "name": "Email Not Sent?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [200, 100]
+    },
+    {
+      "parameters": {
+        "language": "JavaScript",
+        "jsCode": "// DB is SOURCE OF TRUTH\nconst dbData = $json;\n\n// Parse cart JSON\nvar cart = [];\ntry {\n  cart = JSON.parse(dbData.cart_json || '[]');\n} catch(e) {\n  cart = [];\n}\n\n// Calculate display totals\nvar subtotal = ((dbData.subtotal_cents || 0) / 100).toFixed(2);\nvar tax = ((dbData.tax_cents || 0) / 100).toFixed(2);\nvar total = ((dbData.total_cents || 0) / 100).toFixed(2);\n\nreturn [{\n  json: {\n    order_id: dbData.order_id,\n    customer_name: dbData.customer_name || 'Valued Customer',\n    email: dbData.customer_email || '',\n    source: dbData.source || 'unknown',\n    cart: cart,\n    subtotal: subtotal,\n    tax: tax,\n    total: total\n  }\n}];"
+      },
+      "id": "build-order-1",
+      "name": "Build Order Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [400, 0]
+    },
+    {
+      "parameters": {
+        "language": "JavaScript",
+        "jsCode": "const cart = $json.cart || [];\n\nlet cartHtml = '<table style=\"width:100%;border-collapse:collapse;font-size:14px;\"\u003e';\n\ncart.forEach(function(item) {\n  var price = parseFloat(item.price) || 0;\n  var qty = parseInt(item.qty) || 1;\n  var lineTotal = (price * qty).toFixed(2);\n  cartHtml += '<tr\u003e' +\n    '<td style=\"padding:8px 0;color:#1F1B1D;\"\u003e' + qty + 'x ' + (item.name || 'Item') + '\u003c/td\u003e' +\n    '<td style=\"text-align:right;color:#1F1B1D;\"\u003e$' + lineTotal + '\u003c/td\u003e' +\n    '</tr\u003e';\n});\n\ncartHtml += '<tr\u003e<td colspan=\"2\"\u003e<hr style=\"border:none;border-top:1px solid #E6E1E1;margin:12px 0;\" /\u003e</td\u003e</tr\u003e' +\n  '<tr\u003e<td\u003eSubtotal</td\u003e<td style=\"text-align:right;\"\u003e$' + $json.subtotal + '</td\u003e</tr\u003e' +\n  '<tr\u003e<td\u003eTax</td\u003e<td style=\"text-align:right;\"\u003e$' + $json.tax + '</td\u003e</tr\u003e' +\n  '<tr style=\"font-weight:700;\"\u003e<td\u003eTotal</td\u003e<td style=\"text-align:right;\"\u003e$' + $json.total + '</td\u003e</tr\u003e' +\n  '</table\u003e';\n\nreturn [{\n  json: Object.assign({}, $json, { CART_HTML: cartHtml })\n}];"
+      },
+      "id": "build-cart-1",
+      "name": "Build Cart HTML",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [600, 0]
+    },
+    {
+      "parameters": {
+        "language": "JavaScript",
+        "jsCode": "var data = $json;\nvar year = new Date().getFullYear();\n\n// Detect order type from DB source\nvar orderType = 'Order';\nvar subjectLine = 'Your Utopia Deli Order Receipt';\nvar pickupText = 'We\'re preparing your order now.';\n\nif (data.source === 'meal-prep') {\n  orderType = 'Meal Prep Order';\n  subjectLine = 'Your Utopia Deli Meal Prep Receipt';\n  pickupText = 'Your meals are being prepared fresh for Thursday pickup.';\n} else if (data.source === 'online-order') {\n  orderType = 'Pickup Order';\n}\n\nvar emailHtml = '<div style=\"font-family:Arial,sans-serif;max-width:600px;margin:auto;background:#FBF6F6;padding:24px;\"\u003e' +\n  '<div style=\"text-align:center;margin-bottom:24px;\"\u003e' +\n  '<a href=\"https://www.theutopiadeli.com\" target=\"_blank\"\u003e' +\n  '<img src=\"https://cdn.shopify.com/s/files/1/0763/5042/3270/files/TheUtopiaDeliLogo_menu.png?v=1774974380\" style=\"max-width:220px;\" /\u003e' +\n  '</a\u003e\u003c/div\u003e' +\n  '<p style=\"color:#590B3F;font-size:24px;font-weight:700;\"\u003ePayment received ✅\u003c/p\u003e' +\n  '<p style=\"color:#754681;font-style:italic;\"\u003eThe Utopia Deli. It\'s just good food.\u003c/p\u003e' +\n  '<p style=\"font-size:14px;color:#1F1B1D;\"\u003eThanks for your payment, ' + data.customer_name + '. ' + pickupText + '\u003c/p\u003e' +\n  '<p style=\"font-size:14px;color:#1F1B1D;margin-top:16px;\"\u003e\u003cstrong\u003e' + orderType + ' #:\u003c/strong\u003e ' + data.order_id + '\u003c/p\u003e' +\n  '\u003ch3 style=\"color:#590B3F;margin-top:24px;\"\u003eOrder Summary\u003c/h3\u003e' +\n  data.CART_HTML +\n  '<p style=\"margin-top:24px;font-size:12px;color:#8A8585;text-align:center;\"\u003e' +\n  '\u0026copy; ' + year + '\u003cbr/\u003e' +\n  'The Utopia Deli\u003cbr/\u003e' +\n  '801 S Chester St, Little Rock, AR 72202\u003cbr/\u003e' +\n  '+1 (501) 551-5944\u003c/p\u003e' +\n  '\u003c/div\u003e';\n\nreturn [{\n  json: Object.assign({}, data, {\n    email_html: emailHtml,\n    email_subject: subjectLine\n  })\n}];"
+      },
+      "id": "build-email-1",
+      "name": "Build Branded Email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [800, 0]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "condition-2",
+              "leftValue": "={{$json.email}}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ]
+        }
+      },
+      "id": "if-has-email-1",
+      "name": "Email Exists?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [1000, 0]
+    },
+    {
+      "parameters": {
+        "fromEmail": "orders@utopiadeli.com",
+        "toEmail": "={{$json.email}}",
+        "subject": "={{$json.email_subject}}",
+        "html": "={{$json.email_html}}",
+        "options": {}
+      },
+      "id": "send-email-1",
+      "name": "Send Receipt Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [1200, -100]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE orders SET email_sent = 1, email_sent_at = datetime('now') WHERE order_id = '{{$json.order_id}}';"
+      },
+      "id": "mark-sent-1",
+      "name": "Mark Email Sent",
+      "type": "n8n-nodes-base.sqlite",
+      "typeVersion": 2,
+      "position": [1400, -100],
+      "credentials": {
+        "sqlite": {
+          "id": "utopia-orders",
+          "name": "Utopia Orders DB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{\n  json: {\n    success: true,\n    order_id: $json.order_id,\n    email_sent: true,\n    timestamp: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "success-response-1",
+      "name": "Build Success Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [1600, -100]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{$json}}"
+      },
+      "id": "respond-1",
+      "name": "Respond OK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1800, -100]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{\n  json: {\n    success: true,\n    deduplicated: true,\n    reason: 'Email already sent for this order',\n    order_id: $json.order_id || 'unknown'\n  }\n}];"
+      },
+      "id": "already-sent-1",
+      "name": "Already Sent Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [400, 200]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{\n  json: {\n    success: false,\n    error: 'Order not found in database',\n    order_id: $json.order_id || 'unknown'\n  }\n}];"
+      },
+      "id": "not-found-1",
+      "name": "Not Found Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{\n  json: {\n    success: false,\n    error: 'No email address for customer',\n    order_id: $json.order_id || 'unknown'\n  }\n}];"
+      },
+      "id": "no-email-1",
+      "name": "No Email Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [1200, 100]
+    }
+  ],
+  "connections": {
+    "Frontend Webhook": {
+      "main": [
+        [
+          {
+            "node": "Normalize Frontend",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Square Webhook": {
+      "main": [
+        [
+          {
+            "node": "Normalize Square",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Frontend": {
+      "main": [
+        [
+          {
+            "node": "Route Trigger",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Square": {
+      "main": [
+        [
+          {
+            "node": "Route Trigger",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route Trigger": {
+      "main": [
+        [
+          {
+            "node": "Prep DB Lookup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prep DB Lookup": {
+      "main": [
+        [
+          {
+            "node": "Lookup Order in DB",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lookup Order in DB": {
+      "main": [
+        [
+          {
+            "node": "Extract DB Row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract DB Row": {
+      "main": [
+        [
+          {
+            "node": "Order Exists?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Order Exists?": {
+      "main": [
+        [
+          {
+            "node": "Email Not Sent?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Not Found Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email Not Sent?": {
+      "main": [
+        [
+          {
+            "node": "Build Order Data",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Already Sent Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Order Data": {
+      "main": [
+        [
+          {
+            "node": "Build Cart HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Cart HTML": {
+      "main": [
+        [
+          {
+            "node": "Build Branded Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Branded Email": {
+      "main": [
+        [
+          {
+            "node": "Email Exists?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email Exists?": {
+      "main": [
+        [
+          {
+            "node": "Send Receipt Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Email Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Receipt Email": {
+      "main": [
+        [
+          {
+            "node": "Mark Email Sent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark Email Sent": {
+      "main": [
+        [
+          {
+            "node": "Build Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Success Response": {
+      "main": [
+        [
+          {
+            "node": "Respond OK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "name": "utopia-deli",
+      "color": "#590B3F"
+    },
+    {
+      "name": "production",
+      "color": "#22c55e"
+    }
+  ],
+  "pinData": {},
+  "versionId": "confirmation-email-v3.0.0"
+}

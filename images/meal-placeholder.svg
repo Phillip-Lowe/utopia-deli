@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300">
+  <rect width="400" height="300" fill="#590B3F" rx="20"/>
+  <circle cx="200" cy="150" r="80" fill="#7a1a55" opacity="0.5"/>
+  <text x="200" y="170" text-anchor="middle" font-size="80" font-family="system-ui">🍽️</text>
+  <text x="200" y="250" text-anchor="middle" font-size="16" font-family="system-ui" fill="#D59F5C" font-weight="600">The Utopia Deli</text>
+</svg>

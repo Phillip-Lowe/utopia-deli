@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- House Specialties icon - hand-drawn style flame/star -->
+  <rect x="8" y="8" width="48" height="48" rx="8" fill="#590B3F"/>
+  <!-- Spark/star shape -->
+  <path d="M32 16 L36 28 L48 28 L38 36 L42 48 L32 40 L22 48 L26 36 L16 28 L28 28 Z" 
+        fill="#D59F5C" stroke="#f5e6d0" stroke-width="1.5" stroke-linejoin="round"/>
+  <!-- Inner glow -->
+  <circle cx="32" cy="32" r="4" fill="#AF3D4B"/>
+  <!-- Dots around -->
+  <circle cx="20" cy="20" r="2" fill="#D59F5C" opacity="0.6"/>
+  <circle cx="44" cy="20" r="2" fill="#D59F5C" opacity="0.6"/>
+  <circle cx="20" cy="44" r="2" fill="#D59F5C" opacity="0.6"/>
+  <circle cx="44" cy="44" r="2" fill="#D59F5C" opacity="0.6"/>
+</svg>

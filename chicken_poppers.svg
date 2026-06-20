@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="400" height="400">
+  <!-- Chicken Poppers / Nuggets -->
+  <!-- Pile of nuggets -->
+  <!-- Nugget 1 -->
+  <!-- Irregular breaded shape -->
+  <path d="M 65,130 Q 55,120 60,100 Q 65,85 85,88 Q 105,90 110,105 Q 115,120 100,130 Q 85,140 65,130" fill="#D4A017" stroke="#B8860B" stroke-width="2"/>
+  <!-- Breading texture dots -->
+  <circle cx="70" cy="110" r="2.5" fill="#C99700"/>
+  <circle cx="85" cy="105" r="2" fill="#C99700"/>
+  <circle cx="95" cy="115" r="3" fill="#C99700"/>
+  <circle cx="78" cy="122" r="2" fill="#C99700"/>
+  <circle cx="90" cy="125" r="2.5" fill="#C99700"/>
+  <circle cx="105" cy="108" r="2" fill="#C99700"/>
+  
+  <!-- Nugget 2 -->
+  <path d="M 105,120 Q 95,110 100,95 Q 105,80 125,82 Q 145,85 148,100 Q 152,115 138,125 Q 125,135 105,120" fill="#E0B028" stroke="#C99700" stroke-width="2"/>
+  
+  <!-- Breading dots -->
+  <circle cx="115" cy="100" r="2" fill="#C99700"/>
+  <circle cx="130" cy="95" r="2.5" fill="#C99700"/>
+  <circle cx="140" cy="105" r="2" fill="#C99700"/>
+  <circle cx="120" cy="110" r="3" fill="#C99700"/>
+  <circle cx="135" cy="115" r="2.5" fill="#C99700"/>
+  <circle cx="110" cy="118" r="2" fill="#C99700"/>
+  
+  <!-- Nugget 3 (on top) -->
+  <path d="M 85,95 Q 78,85 82,72 Q 88,60 105,62 Q 122,65 126,78 Q 130,90 118,100 Q 105,108 85,95" fill="#D4A017" stroke="#B8860B" stroke-width="2"/>
+  
+  <!-- Breading dots -->
+  <circle cx="95" cy="78" r="2" fill="#C99700"/>
+  <circle cx="108" cy="72" r="2.5" fill="#C99700"/>
+  <circle cx="115" cy="82" r="2" fill="#C99700"/>
+  <circle cx="100" cy="88" r="3" fill="#C99700"/>
+  <circle cx="92" cy="85" r="2.5" fill="#C99700"/>
+</svg>

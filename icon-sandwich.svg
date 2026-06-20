@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- Sandwich/Sub icon in Utopia Deli brand colors -->
+  <rect x="8" y="12" width="48" height="40" rx="6" fill="#590B3F"/>
+  <rect x="12" y="16" width="40" height="32" rx="4" fill="#7a1a55"/>
+  <!-- Bread top -->
+  <ellipse cx="32" cy="22" rx="18" ry="8" fill="#D59F5C"/>
+  <ellipse cx="32" cy="20" rx="16" ry="6" fill="#f5e6d0"/>
+  <!-- Lettuce -->
+  <path d="M14 28 Q20 24 26 28 Q32 24 38 28 Q44 24 50 28" stroke="#22c55e" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <!-- Tomato -->
+  <circle cx="24" cy="34" r="4" fill="#AF3D4B"/>
+  <circle cx="40" cy="34" r="4" fill="#AF3D4B"/>
+  <!-- Bread bottom -->
+  <ellipse cx="32" cy="42" rx="18" ry="6" fill="#D59F5C"/>
+  <ellipse cx="32" cy="40" rx="16" ry="4" fill="#f5e6d0"/>
+</svg>

@@ -1,0 +1,183 @@
+{
+  "meal_prep_branch": {
+    "description": "Complete meal prep branch nodes for n8n. Insert Switch node after Webhook trigger, connect Output 0 to these nodes.",
+    
+    "nodes": [
+      {
+        "node": "Switch - Source Router",
+        "purpose": "Routes meal-prep vs regular checkout",
+        "type": "n8n-nodes-base.switch",
+        "typeVersion": 2,
+        "position": [-900, -200],
+        "parameters": {
+          "rules": {
+            "rules": [
+              {
+                "value": "meal-prep",
+                "output": 0,
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "typeValidation": "strict"
+                  },
+                  "conditions": [
+                    {
+                      "id": "rule-0",
+                      "leftValue": "={{ $json.source || $json.body?.source }}",
+                      "rightValue": "meal-prep",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "options": {}
+        },
+        "notes": "Output 0 = meal-prep, Output 1 = regular checkout (fallback)"
+      },
+
+      {
+        "node": "MP - Validate",
+        "purpose": "Validate meal prep payload, check deadline",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [-680, -300],
+        "parameters": {
+          "language": "javaScript",
+          "jsCode": "const body = $json.body || $json;\n\n// Check source\nif (body.source !== 'meal-prep') {\n  throw new Error('Invalid source: expected meal-prep');\n}\n\n// Required fields\nconst required = ['customer', 'items', 'pricing'];\nconst missing = required.filter(k =\u003e !body[k]);\nif (missing.length \u003e 0) {\n  throw new Error('Missing required fields: ' + missing.join(', '));\n}\n\nconst cust = body.customer;\nif (!cust.name || !cust.phone || !cust.email) {\n  throw new Error('Missing customer name, phone, or email');\n}\n\n// Validate email\nconst emailRe = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;\nif (!emailRe.test(cust.email)) {\n  throw new Error('Invalid email format');\n}\n\n// Validate phone (10 digits)\nconst phoneDigits = String(cust.phone).replace(/\\D/g, '');\nif (phoneDigits.length \u003c 10) {\n  throw new Error('Invalid phone number');\n}\n\n// Validate items\nconst items = body.items || [];\nif (!Array.isArray(items) || items.length === 0) {\n  throw new Error('At least one meal required');\n}\n\n// Validate pricing\nconst pricing = body.pricing || {};\nconst expectedTotal = (pricing.subtotal || 0) + (pricing.labor || 0) + (pricing.tax || 0);\nif (Math.abs(expectedTotal - (pricing.total || 0)) \u003e 2) {\n  throw new Error('Pricing calculation mismatch');\n}\n\n// DEADLINE CHECK: Order by Wednesday 12:00 PM CT\nconst now = new Date();\nconst cstTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/Chicago' }));\nconst day = cstTime.getDay();\nconst hour = cstTime.getHours();\n\nconst isOrderingClosed = (day === 3 \u0026\u0026 hour \u003e= 12) || day === 4 || (day === 5 \u0026\u0026 hour \u003c 12);\n\nif (isOrderingClosed) {\n  throw new Error('Orders are closed. Ordering reopens Friday at 12:00 PM for next week.');\n}\n\n// Calculate next Thursday pickup date\nconst pickupDate = new Date(cstTime);\nconst daysUntilThu = (4 - day + 7) % 7 || 7;\npickupDate.setDate(pickupDate.getDate() + daysUntilThu);\nconst pickupDateStr = pickupDate.toISOString().split('T')[0];\n\n// Generate order ID\nconst ymd = cstTime.toISOString().slice(0,10).replace(/-/g, '');\nconst seq = String(Math.floor(Math.random() * 900) + 100).padStart(3, '0');\nconst order_id = 'UMP-' + ymd + '-' + seq;\n\nreturn [{\n  json: {\n    ...body,\n    order_id,\n    phone_digits: phoneDigits,\n    pickup_date: pickupDateStr,\n    validated_at: cstTime.toISOString(),\n    ordering_open: true\n  }\n}];"
+        }
+      },
+
+      {
+        "node": "MP - Build Square Payload",
+        "purpose": "Build valid JSON payload for Square API",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [-460, -300],
+        "parameters": {
+          "language": "javaScript",
+          "jsCode": "const input = $json;\nconst items = input.items || [];\n\n// Build Square line items\nconst lineItems = items.map(item =\u003e ({\n  name: item.name,\n  quantity: String(item.qty),\n  base_price_money: {\n    amount: item.price,\n    currency: 'USD'\n  }\n}));\n\n// Add labor fee\nlineItems.push({\n  name: 'Labor \u0026 Packaging',\n  quantity: '1',\n  base_price_money: {\n    amount: input.pricing.labor,\n    currency: 'USD'\n  }\n});\n\n// Add tax as line item\nlineItems.push({\n  name: 'Tax (6.5%)',\n  quantity: '1',\n  base_price_money: {\n    amount: input.pricing.tax,\n    currency: 'USD'\n  }\n});\n\n// Build Square payload\nconst payload = {\n  idempotency_key: $execution.id,\n  order: {\n    location_id: 'J4B6A3X6RYA63',\n    reference_id: input.order_id,\n    line_items: lineItems,\n    note: 'Meal Prep Order - Weekly pre-made meals\\nSource: Utopia Deli Meal Prep System',\n    metadata: {\n      order_type: 'meal_prep',\n      subtotal_cents: String(input.pricing.subtotal),\n      labor_cents: String(input.pricing.labor),\n      tax_cents: String(input.pricing.tax),\n      total_cents: String(input.pricing.total),\n      tax_rate_percent: '6.5',\n      tax_handling: 'manual_line_item',\n      order_system: 'utopia_deli_meal_prep',\n      pickup_date: input.pickup_date\n    }\n  },\n  checkout_options: {\n    redirect_url: 'https://order.theutopiadeli.com/catering/?mp_success=1\u0026order=' + input.order_id,\n    merchant_support_email: 'theutopiadelilittlerock@gmail.com',\n    ask_for_shipping_address: false,\n    allow_tipping: false\n  },\n  pre_populated_data: {\n    buyer_email: input.customer.email,\n    buyer_phone_number: input.phone_digits,\n    buyer_address: {\n      first_name: input.customer.name.split(' ')[0] || input.customer.name,\n      last_name: input.customer.name.split(' ').slice(1).join(' ') || ''\n    }\n  }\n};\n\nreturn [{\n  json: {\n    ...input,\n    square_payload: payload,\n    square_total: input.pricing.total\n  }\n}];"
+        }
+      },
+
+      {
+        "node": "MP - Create Square Payment Link",
+        "purpose": "Send payload to Square API",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.1,
+        "position": [-240, -300],
+        "parameters": {
+          "method": "POST",
+          "url": "https://connect.squareup.com/v2/online-checkout/payment-links",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpBearerAuth",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Square-Version",
+                "value": "2026-05-20"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "sendBody": true,
+          "contentType": "json",
+          "body": "={{ JSON.stringify($json.square_payload) }}",
+          "options": {
+            "timeout": 30000
+          }
+        },
+        "credentials": {
+          "httpBearerAuth": {
+            "id": "52UxQeWEulCNtFuR",
+            "name": "Deli Square Bearer Auth account"
+          }
+        }
+      },
+
+      {
+        "node": "MP - Extract Payment Link",
+        "purpose": "Parse Square response for payment URL",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [-20, -300],
+        "parameters": {
+          "language": "javaScript",
+          "jsCode": "const response = $json;\n\n// Extract payment link from Square response\nconst paymentLink = response.payment_link?.url || response.url || response.long_url;\nconst orderId = response.payment_link?.order_id || response.order_id;\nconst linkId = response.payment_link?.id || response.id;\n\nif (!paymentLink) {\n  throw new Error('Failed to create payment link: ' + JSON.stringify(response));\n}\n\nreturn [{\n  json: {\n    ...($input.first().json),\n    payment_link: paymentLink,\n    payment_link_id: linkId,\n    square_order_id: orderId,\n    status: 'payment_required'\n  }\n}];"
+        }
+      },
+
+      {
+        "node": "MP - Send Payment Response to Frontend",
+        "purpose": "Return payment link to customer browser",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1,
+        "position": [200, -300],
+        "parameters": {
+          "options": {},
+          "respondWith": "json",
+          "responseBody": "={{ JSON.stringify({\n  ok: true,\n  message: 'Order received! Complete payment to confirm.',\n  order_id: $json.order_id,\n  payment_link: $json.payment_link,\n  total_cents: $json.pricing.total,\n  pickup_date: $json.pickup_date,\n  customer_email: $json.customer.email\n}) }}"
+        }
+      },
+
+      {
+        "node": "MP - Email Customer Payment Link",
+        "purpose": "Send meal prep confirmation with payment link",
+        "type": "n8n-nodes-base.smtp",
+        "typeVersion": 2,
+        "position": [200, -100],
+        "parameters": {
+          "fromEmail": "order@theutopiadeli.com",
+          "toEmail": "={{ $json.customer.email }}",
+          "subject": "={{ 'Meal Prep Order ' + $json.order_id + ' - Payment Required' }}",
+          "html": "=\u003cp\u003eHi {{ $json.customer.name }},\u003c/p\u003e\n\n\u003cp\u003eYour meal prep order is ready!\u003c/p\u003e\n\n\u003ch3\u003eOrder {{ $json.order_id }}\u003c/h3\u003e\n\u003cul\u003e\n  \u003cli\u003e\u003cstrong\u003ePickup:\u003c/strong\u003e Thursday {{ $json.pickup_date }} at The Utopia Deli\u003c/li\u003e\n  \u003cli\u003e\u003cstrong\u003eTime:\u003c/strong\u003e {{ $json.customer.pickup_time || 'Anytime 12:30-7:30 PM' }}\u003c/li\u003e\n\u003c/ul\u003e\n\n\u003ch3\u003eMeals Ordered:\u003c/h3\u003e\n\u003ctable border=\"0\" cellpadding=\"8\" style=\"border-collapse:collapse;width:100%;\"\u003e\n  \u003ctr style=\"background:#f5e6d0;\"\u003e\n    \u003cth align=\"left\"\u003eMeal\u003c/th\u003e\n    \u003cth\u003eQty\u003c/th\u003e\n    \u003cth align=\"right\"\u003ePrice\u003c/th\u003e\n  \u003c/tr\u003e\n  {{ $json.items.map(i =\u003e `\u003ctr\u003e\u003ctd\u003e${i.name}\u003c/td\u003e\u003ctd align=\"center\"\u003e${i.qty}\u003c/td\u003e\u003ctd align=\"right\"\u003e$${(i.qty * i.price / 100).toFixed(2)}\u003c/td\u003e\u003c/tr\u003e`).join('') }}\n  \u003ctr\u003e\u003ctd colspan=\"2\"\u003eLabor \u0026 Packaging\u003c/td\u003e\u003ctd align=\"right\"\u003e$50.00\u003c/td\u003e\u003c/tr\u003e\n  \u003ctr\u003e\u003ctd colspan=\"2\"\u003eTax (6.5%)\u003c/td\u003e\u003ctd align=\"right\"\u003e$${($json.pricing.tax / 100).toFixed(2)}\u003c/td\u003e\u003c/tr\u003e\n  \u003ctr style=\"font-weight:bold;\"\u003e\u003ctd colspan=\"2\"\u003eTotal\u003c/td\u003e\u003ctd align=\"right\"\u003e$${($json.pricing.total / 100).toFixed(2)}\u003c/td\u003e\u003c/tr\u003e\n\u003c/table\u003e\n\n\u003cp style=\"margin:24px 0;\"\u003e\n  \u003ca href=\"{{ $json.payment_link }}\" style=\"background:#590B3F;color:white;padding:14px 28px;text-decoration:none;border-radius:8px;font-weight:bold;display:inline-block;\"\u003ePay Now to Complete Order\u003c/a\u003e\n\u003c/p\u003e\n\n\u003cp style=\"font-size:12px;color:#666;\"\u003e\n  Orders are non-refundable after Wednesday at 12:00 PM.\u003cbr\u003e\n  Questions? Call (501) 551-5944\n\u003c/p\u003e",
+          "options": {
+            "appendAttribution": false
+          }
+        },
+        "credentials": {
+          "smtp": {
+            "id": "gmail-smtp",
+            "name": "Gmail SMTP"
+          }
+        }
+      },
+
+      {
+        "node": "MP - Save to SQLite",
+        "purpose": "Log meal prep order to database",
+        "type": "n8n-nodes-base.sqlite",
+        "typeVersion": 2,
+        "position": [420, -300],
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "INSERT INTO meal_prep_orders (order_id, customer_name, customer_email, customer_phone, items_json, subtotal_cents, labor_cents, tax_cents, total_cents, pickup_date, pickup_time, payment_link, square_order_id, status, source, notes, created_at) VALUES ('{{ $json.order_id }}', '{{ $json.customer.name }}', '{{ $json.customer.email }}', '{{ $json.phone_digits }}', '{{ JSON.stringify($json.items) }}', {{ $json.pricing.subtotal }}, {{ $json.pricing.labor }}, {{ $json.pricing.tax }}, {{ $json.pricing.total }}, '{{ $json.pickup_date }}', '{{ $json.customer.pickup_time }}', '{{ $json.payment_link }}', '{{ $json.square_order_id }}', 'pending_payment', 'meal-prep', '{{ $json.customer.notes }}', datetime('now'));"
+        },
+        "credentials": {
+          "sqlite": {
+            "id": "utopia-orders",
+            "name": "Utopia Orders DB"
+          }
+        }
+      }
+    ],
+
+    "connections": [
+      {"from": "Switch - Source Router", "to": "MP - Validate", "outputIndex": 0},
+      {"from": "MP - Validate", "to": "MP - Build Square Payload"},
+      {"from": "MP - Build Square Payload", "to": "MP - Create Square Payment Link"},
+      {"from": "MP - Create Square Payment Link", "to": "MP - Extract Payment Link"},
+      {"from": "MP - Extract Payment Link", "to": "MP - Send Payment Response to Frontend"},
+      {"from": "MP - Extract Payment Link", "to": "MP - Email Customer Payment Link", "type": "main"},
+      {"from": "MP - Extract Payment Link", "to": "MP - Save to SQLite", "type": "main"}
+    ]
+  }
+}

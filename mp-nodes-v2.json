@@ -1,0 +1,46 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "const computeTotals = $(\"mp compute totals\").first().json;\nconst squareResponse = $input.first().json;\n\nreturn {\n json: {\n ...computeTotals,\n payment_link: squareResponse.payment_link,\n order_id: squareResponse.order_id,\n related_resources: squareResponse.related_resources\n }\n};"
+      },
+      "id": "cf356144-ee5e-401a-80e0-1a48ca27f111",
+      "name": "MP Merge",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1744, 528]
+    },
+    {
+      "parameters": {
+        "jsCode": "const sqlite3 = require('sqlite3').verbose();\nconst path = '/Users/philliplowe/.openclaw/workspaces/sol/utopia-deli-revamp/orders.db';\nconst merged = $(\"MP Merge\").first().json;\nconst customer = merged.customer || {};\nconst items = merged.items || [];\nconst pricing = merged.pricing || {};\nconst paymentLink = merged.payment_link || {};\nconst linkUrl = paymentLink.url || paymentLink.long_url || '';\n\nreturn new Promise((resolve) => {\n  const db = new sqlite3.Database(path, (err) => {\n    if (err) { resolve([{ json: { db_error: err.message } }]); return; }\n    db.run(\n      'INSERT INTO orders (order_id, customer_name, customer_email, customer_phone, customer_city, customer_county, cart_json, subtotal_cents, tax_cents, total_cents, square_payment_link, square_order_id, notes, status, source) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',\n      [\n        merged.order_id || '',\n        customer.name || '',\n        customer.email || '',\n        customer.phone || '',\n        customer.city || 'Little Rock',\n        customer.county || '',\n        JSON.stringify(items),\n        pricing.subtotal || 0,\n        pricing.tax || 0,\n        pricing.total || 0,\n        linkUrl,\n        merged.square_order_id || merged.order_id || '',\n        customer.notes || merged.notes || '',\n        'pending',\n        'meal-prep'\n      ],\n      function(err) {\n        if (err) resolve([{ json: { db_error: err.message } }]);\n        else resolve([{ json: { db_saved: true, db_rowid: this.lastID } }]);\n        db.close();\n      }\n    );\n  });\n});"
+      },
+      "id": "3a2972bf-c983-434f-8d33-f228f6d63777",
+      "name": "Save to SQLite2",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1984, 448]
+    },
+    {
+      "parameters": {
+        "jsCode": "const merged = $(\"MP Merge\").first().json;\nconst dbResult = $(\"Save to SQLite2\").first().json;\n\nconst paymentLink = merged.payment_link || {};\nconst squareLink = (paymentLink.url || paymentLink.long_url) || merged.payment_link || '';\n\nreturn {\n json: {\n ok: true,\n message: 'Order received! Check your email for payment link.',\n square_link: squareLink,\n order_id: merged.order_id || '',\n total_cents: merged.pricing?.total || 0,\n db_saved: dbResult.db_saved || false\n }\n};"
+      },
+      "id": "0091d1d4-7d2e-4c4c-9753-5801f60c2752",
+      "name": "MP Format Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2256, 496]
+    }
+  ],
+  "connections": {
+    "MP Merge": {
+      "main": [[{ "node": "Save to SQLite2", "type": "main", "index": 0 }]]
+    },
+    "Save to SQLite2": {
+      "main": [[{ "node": "MP Format Response", "type": "main", "index": 0 }]]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "instanceId": "957e8369ac802c52d35b65937048184ae2d96385f9ed3ab8b9e6e5b625d6e409"
+  }
+}

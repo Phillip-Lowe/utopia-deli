@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- Sides & Extras icon - fries/cup in Utopia Deli brand colors -->
+  <rect x="8" y="8" width="48" height="48" rx="8" fill="#590B3F"/>
+  <!-- Cup/container -->
+  <path d="M20 48 L22 24 L42 24 L44 48 Z" fill="#754681" stroke="#D59F5C" stroke-width="1.5"/>
+  <path d="M22 24 L24 20 L40 20 L42 24 Z" fill="#D59F5C"/>
+  <!-- Fries sticks -->
+  <rect x="26" y="14" width="3" height="10" rx="1" fill="#f5e6d0"/>
+  <rect x="30" y="12" width="3" height="12" rx="1" fill="#D59F5C"/>
+  <rect x="34" y="14" width="3" height="10" rx="1" fill="#f5e6d0"/>
+  <rect x="28" y="16" width="3" height="8" rx="1" fill="#D59F5C"/>
+  <rect x="32" y="14" width="3" height="10" rx="1" fill="#f5e6d0"/>
+  <!-- Small drink or dipping sauce circle -->
+  <circle cx="48" cy="44" r="6" fill="#AF3D4B"/>
+  <circle cx="48" cy="44" r="4" fill="#c44d5b"/>
+</svg>

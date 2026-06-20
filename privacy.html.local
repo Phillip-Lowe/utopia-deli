@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy & Messaging Terms — The Utopia Deli</title>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ud-primary: #590B3F;
+      --ud-secondary: #754681;
+      --text: #1F2937;
+      --text-light: #6B7280;
+      --bg: #FBFCFE;
+      --card: #FFFFFF;
+      --border: #E5E7EB;
+    }
+    body {
+      font-family: 'Open Sans', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 40px 24px;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    .header img {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      margin-bottom: 16px;
+    }
+    .header h1 {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--ud-primary);
+      margin: 0 0 8px;
+    }
+    .header p {
+      color: var(--text-light);
+      font-size: 14px;
+      margin: 0;
+    }
+    .section {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 28px;
+      margin-bottom: 20px;
+    }
+    .section h2 {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--ud-primary);
+      margin: 0 0 16px;
+    }
+    .section p, .section li {
+      font-size: 14px;
+      color: var(--text);
+      margin: 0 0 12px;
+    }
+    .section ul {
+      margin: 0;
+      padding-left: 20px;
+    }
+    .section li {
+      margin-bottom: 8px;
+    }
+    .footer {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-light);
+      font-size: 13px;
+    }
+    .footer a {
+      color: var(--ud-secondary);
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <img src="images/logo.png" alt="The Utopia Deli">
+      <h1>Privacy & Messaging Terms</h1>
+      <p>The Utopia Deli — 801 S. Chester St., Little Rock, AR</p>
+    </div>
+
+    <div class="section">
+      <h2>📱 Text Messages (SMS)</h2>
+      <p>By providing your phone number, you consent to receive text messages from The Utopia Deli about:</p>
+      <ul>
+        <li>Order updates and pickup reminders</li>
+        <li>Weekly menu announcements</li>
+        <li>Meal prep deadlines and availability</li>
+        <li>Catering openings and special events</li>
+      </ul>
+      <p><strong>Message frequency:</strong> 2–4 messages per week. Message and data rates may apply based on your carrier plan.</p>
+      <p><strong>To opt out:</strong> Reply <strong>STOP</strong> at any time. You will receive one confirmation message and then no further texts.</p>
+      <p><strong>To get help:</strong> Reply <strong>HELP</strong> or call us at <a href="tel:5015515944">(501) 551-5944</a>.</p>
+    </div>
+
+    <div class="section">
+      <h2>📧 Email Communications</h2>
+      <p>By providing your email address, you consent to receive emails from The Utopia Deli about:</p>
+      <ul>
+        <li>Order confirmations and receipts</li>
+        <li>Weekly specials and menu drops</li>
+        <li>Meal prep reminders and deadlines</li>
+        <li>Community stories, events, and behind-the-scenes updates</li>
+      </ul>
+      <p><strong>Email frequency:</strong> 2–3 emails per week.</p>
+      <p><strong>To unsubscribe:</strong> Click the "Unsubscribe" link at the bottom of any email. You'll be removed within 24 hours.</p>
+    </div>
+
+    <div class="section">
+      <h2>🔒 How We Protect Your Info</h2>
+      <ul>
+        <li>Your contact info is stored securely and never sold to third parties.</li>
+        <li>We only share data with trusted services (Square for payments, our email/SMS provider) to operate the deli.</li>
+        <li>You can request a copy of your data or ask us to delete it by emailing <a href="mailto:theutopiadelilittlerock@gmail.com">theutopiadelilittlerock@gmail.com</a>.</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h2>📋 Contact Us</h2>
+      <p>The Utopia Deli<br>
+      801 S. Chester St., Little Rock, AR 72202<br>
+      📞 <a href="tel:5015515944">(501) 551-5944</a><br>
+      ✉️ <a href="mailto:theutopiadelilittlerock@gmail.com">theutopiadelilittlerock@gmail.com</a></p>
+    </div>
+  </div>
+
+  <div class="footer">
+    <p>© 2026 The Utopia Deli. Built with care in Little Rock.</p>
+  </div>
+</body>
+</html>
