@@ -1,0 +1,1672 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>Catering & Events — Utopia Deli</title>
+    <link rel="icon" type="image/png" href="../images/logo.png" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --ud-primary: #590b3f;
+        --ud-primary-light: #7a1a55;
+        --ud-accent: #af3d4b;
+        --ud-accent-hover: #c44d5b;
+        --ud-secondary: #754681;
+        --ud-gold: #d59f5c;
+        --ud-gold-light: #f5e6d0;
+        --bg: #fbfcfe;
+        --card: #ffffff;
+        --text: #1f2937;
+        --text-light: #6b7280;
+        --border: #e5e7eb;
+        --input-border: #d1d5db;
+        --input-bg: #ffffff;
+        --focus: #754681;
+        --focus-ring: 0 0 0 3px rgba(117, 70, 129, 0.18);
+        --radius: 14px;
+        --radius-sm: 8px;
+        --shadow: 0 4px 24px rgba(17, 24, 39, 0.08);
+        --shadow-lg: 0 12px 40px rgba(17, 24, 39, 0.12);
+        --success: #22c55e;
+        --error: #dc2626;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          "Open Sans",
+          system-ui,
+          -apple-system,
+          sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        line-height: 1.5;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      /* ===== HEADER ===== */
+      .header {
+        background: linear-gradient(
+          135deg,
+          var(--ud-primary) 0%,
+          var(--ud-primary-light) 50%,
+          var(--ud-secondary) 100%
+        );
+        color: white;
+        padding: 20px 0;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+      }
+      .header-inner {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 0 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .header-brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        text-decoration: none;
+        color: white;
+      }
+      .header-brand img {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+      }
+      .header-brand-text h1 {
+        font-size: 1.2rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+      }
+      .header-brand-text p {
+        font-size: 0.75rem;
+        opacity: 0.85;
+        font-weight: 400;
+      }
+      .header-back {
+        color: white;
+        text-decoration: none;
+        font-size: 0.85rem;
+        font-weight: 600;
+        padding: 8px 16px;
+        border-radius: var(--radius-sm);
+        background: rgba(255, 255, 255, 0.15);
+        transition: background 0.2s;
+      }
+      .header-back:hover {
+        background: rgba(255, 255, 255, 0.25);
+      }
+
+      /* ===== MEAL PREP SECTION ===== */
+      .meal-prep-section {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 32px 20px 20px;
+      }
+      .meal-prep-header {
+        text-align: center;
+        margin-bottom: 24px;
+      }
+      .meal-prep-header h2 {
+        font-size: 1.6rem;
+        font-weight: 800;
+        color: var(--ud-primary);
+        margin-bottom: 8px;
+      }
+      .meal-prep-header p {
+        color: var(--text-light);
+        font-size: 0.9rem;
+      }
+      .meal-prep-deadline {
+        background: linear-gradient(
+          135deg,
+          var(--ud-accent),
+          var(--ud-secondary)
+        );
+        color: white;
+        padding: 14px 20px;
+        border-radius: var(--radius);
+        text-align: center;
+        margin-bottom: 24px;
+        font-weight: 600;
+        font-size: 0.9rem;
+      }
+      .meal-prep-deadline .mp-disclaimer {
+        margin-top: 10px;
+        padding: 10px 14px;
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 8px;
+        font-size: 0.85rem;
+        color: var(--ud-primary);
+        font-weight: 600;
+        line-height: 1.4;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      }
+      .meal-prep-deadline.closed {
+        background: linear-gradient(135deg, #6b7280, #9ca3af);
+      }
+      .dessert-section {
+        margin-top: 32px;
+        margin-bottom: 24px;
+      }
+      .addon-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+        margin-bottom: 24px;
+        max-width: 640px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+      @media (max-width: 640px) {
+        .addon-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+      .addon-card img {
+        width: 100%;
+        height: 160px;
+        object-fit: cover;
+        display: block;
+        border-radius: var(--radius) var(--radius) 0 0;
+      }
+      .meal-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+        margin-bottom: 24px;
+        justify-items: center;
+      }
+      .meal-grid .meal-card:last-child:nth-child(odd) {
+        grid-column: 1 / -1;
+        max-width: calc(50% - 8px);
+      }
+      @media (max-width: 640px) {
+        .meal-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+      .meal-card {
+        background: var(--card);
+        border-radius: var(--radius);
+        overflow: hidden;
+        box-shadow: var(--shadow);
+        transition:
+          transform 0.2s,
+          box-shadow 0.2s;
+        border: 2px solid transparent;
+      }
+      .meal-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
+      }
+      .meal-card.selected {
+        border-color: var(--ud-primary);
+      }
+      .meal-card img {
+        width: 100%;
+        height: 180px;
+        object-fit: cover;
+        display: block;
+      }
+      .meal-img-placeholder {
+        width: 100%;
+        height: 180px;
+        background: linear-gradient(
+          135deg,
+          var(--ud-primary-light) 0%,
+          var(--ud-secondary) 100%
+        );
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .meal-img-placeholder span {
+        font-size: 64px;
+        opacity: 0.6;
+      }
+      .meal-card-body {
+        padding: 16px;
+      }
+      .meal-card-body h3 {
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--text);
+        margin-bottom: 4px;
+      }
+      .meal-card-body .cal {
+        font-size: 0.8rem;
+        color: var(--text-light);
+        margin-bottom: 12px;
+      }
+      .meal-card-body .price {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--ud-primary);
+      }
+      .meal-prep-cta {
+        text-align: center;
+        padding: 24px 16px;
+        background: linear-gradient(
+          135deg,
+          var(--ud-primary) 0%,
+          var(--ud-secondary) 100%
+        );
+        border-radius: var(--radius);
+        margin: 16px 0 24px;
+        color: white;
+      }
+      .meal-prep-cta p {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 12px;
+      }
+      .meal-prep-cta button {
+        background: white;
+        color: var(--ud-primary);
+        font-size: 1.1rem;
+        font-weight: 700;
+        padding: 14px 32px;
+        border: none;
+        border-radius: 50px;
+        cursor: pointer;
+        transition:
+          transform 0.2s,
+          box-shadow 0.2s;
+      }
+      .meal-prep-cta button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+      }
+      .meal-qty {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-top: 12px;
+      }
+      .meal-qty button {
+        width: 36px;
+        height: 36px;
+        border: 1.5px solid var(--border);
+        border-radius: var(--radius-sm);
+        background: var(--bg);
+        font-size: 1.1rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .meal-qty button:hover {
+        border-color: var(--ud-primary);
+        background: rgba(89, 11, 63, 0.05);
+      }
+      .meal-qty button:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+      .meal-qty span {
+        font-weight: 700;
+        font-size: 1rem;
+        min-width: 24px;
+        text-align: center;
+      }
+      /* Package Controls */
+      .package-control {
+        background: var(--card);
+        border-radius: var(--radius);
+        padding: 16px 20px;
+        box-shadow: var(--shadow);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 16px;
+        margin-bottom: 24px;
+        border: 2px solid var(--border);
+        transition: border-color 0.2s;
+      }
+      .package-control.active {
+        border-color: var(--ud-primary);
+      }
+      .package-label {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      .package-label strong {
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--ud-primary);
+      }
+      .package-price {
+        font-size: 0.9rem;
+        color: var(--text-light);
+        font-weight: 600;
+      }
+      .package-qty-controls {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+      .qty-btn {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        border: 2px solid var(--ud-primary);
+        background: white;
+        color: var(--ud-primary);
+        font-size: 1.5rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        line-height: 1;
+        padding: 0;
+      }
+      .qty-btn:hover {
+        background: var(--ud-primary);
+        color: white;
+      }
+      .qty-display {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: var(--text);
+        min-width: 32px;
+        text-align: center;
+      }
+      .meal-prep-totals {
+        background: var(--card);
+        border-radius: var(--radius);
+        padding: 24px;
+        box-shadow: var(--shadow);
+        margin-bottom: 24px;
+      }
+      .meal-prep-totals h3 {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--ud-primary);
+        margin-bottom: 16px;
+      }
+      .totals-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+        border-bottom: 1px solid var(--border);
+        font-size: 0.9rem;
+      }
+      .totals-row:last-child {
+        border-bottom: none;
+        font-weight: 700;
+        font-size: 1.1rem;
+        color: var(--ud-primary);
+        margin-top: 4px;
+        padding-top: 12px;
+        border-top: 2px solid var(--ud-primary);
+      }
+      .meal-prep-checkout {
+        background: var(--card);
+        border-radius: var(--radius);
+        padding: 24px;
+        box-shadow: var(--shadow);
+      }
+      .meal-prep-checkout h3 {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--ud-primary);
+        margin-bottom: 16px;
+      }
+      .checkout-note {
+        background: rgba(175, 61, 75, 0.08);
+        border-left: 3px solid var(--ud-accent);
+        padding: 12px 16px;
+        border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+        margin-bottom: 16px;
+        font-size: 0.85rem;
+        color: var(--text);
+      }
+      .meal-prep-success {
+        text-align: center;
+        padding: 60px 20px;
+        display: none;
+      }
+      .meal-prep-success.active {
+        display: block;
+      }
+
+      /* ===== HERO ===== */
+      .hero {
+        background: linear-gradient(
+          135deg,
+          var(--ud-primary) 0%,
+          var(--ud-secondary) 100%
+        );
+        color: white;
+        padding: 40px 20px;
+        text-align: center;
+      }
+      .hero h2 {
+        font-size: 1.8rem;
+        font-weight: 800;
+        margin-bottom: 12px;
+      }
+      .hero p {
+        font-size: 1rem;
+        opacity: 0.9;
+        max-width: 500px;
+        margin: 0 auto 20px;
+      }
+      .hero-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(255, 255, 255, 0.15);
+        padding: 8px 16px;
+        border-radius: 100px;
+        font-size: 0.8rem;
+        font-weight: 600;
+      }
+
+      /* ===== FORM CONTAINER ===== */
+      .form-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 32px 20px 60px;
+      }
+
+      /* ===== PROGRESS STEPS ===== */
+      .progress-bar {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 32px;
+        position: relative;
+      }
+      .progress-bar::before {
+        content: "";
+        position: absolute;
+        top: 16px;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: var(--border);
+        z-index: 0;
+      }
+      .progress-step {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        z-index: 1;
+      }
+      .progress-step .dot {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 0.8rem;
+        color: var(--text-light);
+        transition: all 0.3s;
+      }
+      .progress-step.active .dot {
+        background: var(--ud-primary);
+        color: white;
+      }
+      .progress-step.completed .dot {
+        background: var(--success);
+        color: white;
+      }
+      .progress-step span {
+        font-size: 0.7rem;
+        font-weight: 600;
+        color: var(--text-light);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+      .progress-step.active span {
+        color: var(--ud-primary);
+      }
+
+      /* ===== FORM SECTIONS ===== */
+      .form-section {
+        background: var(--card);
+        border-radius: var(--radius);
+        padding: 28px;
+        margin-bottom: 20px;
+        box-shadow: var(--shadow);
+        display: none;
+      }
+      .form-section.active {
+        display: block;
+        animation: fadeIn 0.3s ease;
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .section-title {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: var(--ud-primary);
+        margin-bottom: 4px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .section-subtitle {
+        font-size: 0.85rem;
+        color: var(--text-light);
+        margin-bottom: 24px;
+      }
+
+      /* ===== FORM FIELDS ===== */
+      .form-group {
+        margin-bottom: 20px;
+      }
+      .form-group .consent-text {
+        font-size: 11px;
+        color: #6b7280;
+        margin-top: 6px;
+        line-height: 1.4;
+      }
+      .form-group label {
+        display: block;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text);
+        margin-bottom: 6px;
+      }
+      .form-group label .required {
+        color: var(--error);
+        margin-left: 2px;
+      }
+      .form-group label .optional {
+        color: var(--text-light);
+        font-weight: 400;
+        font-size: 0.75rem;
+        margin-left: 4px;
+      }
+      .form-group input,
+      .form-group select,
+      .form-group textarea {
+        width: 100%;
+        padding: 12px 14px;
+        border: 1.5px solid var(--input-border);
+        border-radius: var(--radius-sm);
+        background: var(--input-bg);
+        font-size: 0.95rem;
+        font-family: inherit;
+        color: var(--text);
+        transition:
+          border-color 0.2s,
+          box-shadow 0.2s;
+      }
+      .form-group input:focus,
+      .form-group select:focus,
+      .form-group textarea:focus {
+        outline: none;
+        border-color: var(--focus);
+        box-shadow: var(--focus-ring);
+      }
+      .form-group input.error,
+      .form-group select.error,
+      .form-group textarea.error {
+        border-color: var(--error);
+        background: #fef2f2;
+      }
+      .form-group .error-msg {
+        color: var(--error);
+        font-size: 0.8rem;
+        margin-top: 4px;
+        display: none;
+      }
+      .form-group .error-msg.show {
+        display: block;
+      }
+      .form-group textarea {
+        min-height: 100px;
+        resize: vertical;
+      }
+      .form-group select {
+        cursor: pointer;
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236B7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 12px center;
+        padding-right: 32px;
+      }
+
+      /* ===== CHECKBOX GROUP ===== */
+      .checkbox-group {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 8px;
+      }
+      .checkbox-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 12px;
+        border: 1.5px solid var(--border);
+        border-radius: var(--radius-sm);
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .checkbox-item:hover {
+        border-color: var(--focus);
+        background: rgba(117, 70, 129, 0.05);
+      }
+      .checkbox-item input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        accent-color: var(--ud-primary);
+        cursor: pointer;
+      }
+      .checkbox-item label {
+        margin: 0;
+        font-weight: 500;
+        cursor: pointer;
+        font-size: 0.9rem;
+      }
+
+      /* ===== BUTTONS ===== */
+      .btn-group {
+        display: flex;
+        gap: 12px;
+        margin-top: 24px;
+      }
+      .btn {
+        flex: 1;
+        padding: 14px 24px;
+        border: none;
+        border-radius: var(--radius-sm);
+        font-size: 0.95rem;
+        font-weight: 700;
+        font-family: inherit;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-align: center;
+      }
+      .btn-primary {
+        background: linear-gradient(
+          135deg,
+          var(--ud-primary),
+          var(--ud-secondary)
+        );
+        color: white;
+      }
+      .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(89, 11, 63, 0.3);
+      }
+      .btn-primary:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+      }
+      .btn-secondary {
+        background: var(--bg);
+        color: var(--text);
+        border: 1.5px solid var(--border);
+      }
+      .btn-secondary:hover {
+        background: var(--border);
+      }
+      .order-id-box {
+        background: var(--ud-gold-light);
+        border: 2px solid var(--ud-gold);
+        border-radius: var(--radius-sm);
+        padding: 12px 16px;
+        margin: 16px 0;
+        text-align: center;
+        font-size: 1rem;
+        color: var(--ud-primary);
+      }
+      .order-id-box span {
+        font-weight: 700;
+        font-family: monospace;
+        font-size: 1.1rem;
+      }
+
+      .form-group .consent-text {
+        font-size: 11px;
+        color: #6b7280;
+        margin-top: 6px;
+        line-height: 1.4;
+      }
+
+      /* ===== SUMMARY CARD ===== */
+      .summary-card {
+        background: linear-gradient(
+          135deg,
+          rgba(89, 11, 63, 0.05),
+          rgba(117, 70, 129, 0.05)
+        );
+        border: 1.5px solid var(--ud-primary);
+        border-radius: var(--radius);
+        padding: 24px;
+        margin-bottom: 24px;
+      }
+      .summary-card h3 {
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--ud-primary);
+        margin-bottom: 16px;
+      }
+      .summary-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+        border-bottom: 1px solid var(--border);
+        font-size: 0.9rem;
+      }
+      .summary-row:last-child {
+        border-bottom: none;
+      }
+      .summary-row .label {
+        color: var(--text-light);
+      }
+      .summary-row .value {
+        font-weight: 600;
+        text-align: right;
+      }
+
+      /* ===== SUCCESS STATE ===== */
+      .success-state {
+        text-align: center;
+        padding: 60px 20px;
+        display: none;
+      }
+      .success-state.active {
+        display: block;
+      }
+      .success-icon {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, var(--success), #16a34a);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 24px;
+        font-size: 2.5rem;
+      }
+      .success-state h2 {
+        font-size: 1.6rem;
+        font-weight: 800;
+        color: var(--ud-primary);
+        margin-bottom: 12px;
+      }
+      .success-state p {
+        font-size: 1rem;
+        color: var(--text-light);
+        max-width: 400px;
+        margin: 0 auto 20px;
+      }
+      .success-state .next-steps {
+        background: var(--card);
+        border-radius: var(--radius);
+        padding: 20px;
+        max-width: 400px;
+        margin: 0 auto;
+        text-align: left;
+        box-shadow: var(--shadow);
+      }
+      .success-state .next-steps h4 {
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: var(--ud-primary);
+        margin-bottom: 12px;
+      }
+      .success-state .next-steps ul {
+        list-style: none;
+      }
+      .success-state .next-steps li {
+        font-size: 0.85rem;
+        color: var(--text);
+        padding: 6px 0;
+        padding-left: 24px;
+        position: relative;
+      }
+      .success-state .next-steps li::before {
+        content: "✓";
+        position: absolute;
+        left: 0;
+        color: var(--success);
+        font-weight: 700;
+      }
+
+      /* ===== FOOTER ===== */
+      .footer {
+        background: var(--ud-primary);
+        color: white;
+        padding: 24px;
+        text-align: center;
+      }
+      .footer a {
+        color: var(--ud-gold);
+        text-decoration: none;
+      }
+      .footer a:hover {
+        text-decoration: underline;
+      }
+
+      /* ===== RESPONSIVE ===== */
+      @media (max-width: 640px) {
+        .hero h2 {
+          font-size: 1.4rem;
+        }
+        .form-section {
+          padding: 20px;
+        }
+        .checkbox-group {
+          grid-template-columns: 1fr;
+        }
+        .btn-group {
+          flex-direction: column;
+        }
+        .progress-step span {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Header -->
+    <header class="header">
+      <div class="header-inner">
+        <a href="https://theutopiadeli.com" class="header-brand">
+          <img src="../images/logo.png" alt="Utopia Deli" />
+          <div class="header-brand-text">
+            <h1>The Utopia Deli</h1>
+            <p>It's just good food</p>
+          </div>
+        </a>
+      </div>
+    </header>
+
+    <!-- Hero -->
+    <section class="hero">
+      <h2>🎉 Catering, Events & Meal Prep</h2>
+      <p>
+        From corporate lunches to graduation parties — we bring the good food to
+        you. Or grab healthy meal prep for the week.
+      </p>
+      <div class="hero-badge">
+        <span>📍</span> Little Rock, AR · <span>👥</span> 10–500 guests ·
+        <span>🚚</span> Drop-off or staffed · <span>🍱</span> Weekly Meal Prep
+      </div>
+    </section>
+
+    <!-- Meal Prep Section -->
+    <section class="meal-prep-section" id="meal-prep">
+      <div class="meal-prep-header">
+        <h2>🍱 Weekly Meal Prep</h2>
+        <p>7 healthy, ready-to-eat meals · Get your weekly sets</p>
+        <div
+          style="
+            margin-top: 8px;
+            font-size: 0.85rem;
+            color: var(--ud-gold);
+            font-weight: 600;
+          "
+        >
+          📅 This Week: June 18–25
+        </div>
+      </div>
+
+      <div class="meal-prep-deadline" id="mp-deadline">
+        ⏰ Orders due by <strong>Wednesday at 12:00 PM</strong> · Pickup
+        <strong>Thursday at The Utopia Deli</strong>
+        <div class="mp-disclaimer">
+          ℹ️ Orders are non-refundable after Wednesday noon cutoff.
+        </div>
+      </div>
+
+      <!-- Weekly Meals Display -->
+      <div class="menu-display">
+        <div class="menu-display-header">
+          <h3>This Week's Menu</h3>
+          <p class="menu-display-subtitle">
+            Each weekly set includes all 7 meals · $84/set
+          </p>
+        </div>
+        <div class="meal-grid" id="meal-grid">
+          <!-- Meal cards injected by JS -->
+        </div>
+        <div class="package-control weekly-control">
+          <div class="package-label">
+            <strong>Weekly Meal Sets</strong>
+            <span class="package-price">$84.00/set</span>
+          </div>
+          <div class="package-qty-controls">
+            <button class="qty-btn" onclick="removeWeeklyPackage()">−</button>
+            <span class="qty-display" id="weekly-package-qty">0</span>
+            <button class="qty-btn" onclick="addWeeklyPackage()">+</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Add-Ons Section (Dessert + Juice) -->
+      <div class="addon-section" id="addon-section" style="display: none">
+        <div
+          class="addon-header"
+          style="text-align: center; margin-bottom: 20px"
+        >
+          <h3
+            style="
+              font-size: 1.3rem;
+              font-weight: 800;
+              color: var(--ud-primary);
+              margin-bottom: 4px;
+            "
+          >
+            Add a Sweet Treat or Drink
+          </h3>
+          <p style="color: var(--text-light); font-size: 0.9rem">
+            Single-item add-ons · Add to any meal prep order
+          </p>
+        </div>
+        <div class="addon-grid" id="addon-grid">
+          <!-- Dessert and juice cards injected by JS -->
+        </div>
+      </div>
+
+      <div class="meal-prep-cta" id="mp-cta">
+        <p>Ready to eat healthy this week?</p>
+        <button class="btn btn-primary" onclick="scrollToCheckout()">
+          🍱 Get Your Meals →
+        </button>
+      </div>
+
+      <div class="meal-prep-totals" id="mp-totals" style="display: none">
+        <h3>Order Summary</h3>
+        <div id="mp-totals-rows"></div>
+      </div>
+
+      <div class="meal-prep-checkout" id="mp-checkout" style="display: none">
+        <h3>Checkout</h3>
+        <div class="checkout-note">
+          💳 <strong>Pay in full</strong> to complete your order.
+        </div>
+        <div class="form-group">
+          <label>Your Name <span class="required">*</span></label>
+          <input type="text" id="mp-name" placeholder="Full name" />
+        </div>
+        <div class="form-group">
+          <label>Phone <span class="required">*</span></label>
+          <input type="tel" id="mp-phone" placeholder="(501) 555-0199" />
+        </div>
+        <div class="form-group">
+          <label>Email <span class="required">*</span></label>
+          <input type="email" id="mp-email" placeholder="you@email.com" />
+          <p class="consent-text">
+            By providing your contact info, you agree to receive order updates
+            and occasional messages from The Utopia Deli.
+            <a
+              href="../privacy.html"
+              target="_blank"
+              style="color: var(--ud-secondary); text-decoration: underline"
+              >See privacy policy</a
+            >.
+            <a
+              href="../terms.html"
+              target="_blank"
+              style="color: var(--ud-secondary); text-decoration: underline"
+              >See messaging terms</a
+            >
+            Reply STOP to opt out of texts or click unsubscribe in emails.
+          </p>
+        </div>
+        <div class="form-group">
+          <label>Special Notes <span class="optional">(optional)</span></label>
+          <textarea
+            id="mp-notes"
+            placeholder="Allergies, substitutions, etc."
+          ></textarea>
+        </div>
+        <div class="form-group">
+          <label>Pickup </label>
+          <p
+            style="
+              font-size: 14px;
+              color: var(--text);
+              margin: 0;
+              line-height: 1.5;
+            "
+          >
+            📍
+            <a
+              href="https://maps.google.com/?q=801+S+Chester+St+Little+Rock+AR+72202"
+              target="_blank"
+              style="color: var(--ud-primary); text-decoration: underline"
+              >The Utopia Deli — 801 S. Chester St., Little Rock, AR</a
+            ><br />
+            🕐 Thursday 12:30 PM – 7:30 PM<br />
+            <span style="color: var(--text-light); font-size: 12px"
+              >Meals are prepared fresh Thursday morning. Have your name ready
+              when approaching the window.</span
+            >
+          </p>
+        </div>
+        <button
+          class="btn btn-primary"
+          id="mp-submit-btn"
+          onclick="submitMealPrep()"
+          style="width: 100%; margin-top: 8px"
+        >
+          Pay & Place Order
+        </button>
+      </div>
+
+      <div class="meal-prep-success" id="mp-success">
+        <div class="success-icon">✓</div>
+        <h2>Order Placed!</h2>
+        <p>
+          Thank you for ordering meal prep from The Utopia Deli. Your payment
+          was successful and your order is officially locked in.
+        </p>
+        <div class="order-id-box" id="mp-order-id-box" style="display: none">
+          <strong>Order ID:</strong> <span id="mp-order-id"></span>
+        </div>
+        <div class="next-steps">
+          <h4>Order Status</h4>
+          <ul>
+            <li>
+              <strong>Paid & Received</strong> — Your order has been received by
+              The Utopia Deli system and queued for preparation.
+            </li>
+            <li>No further action is required from you at this time.</li>
+          </ul>
+          <h4>Pickup Information</h4>
+          <ul>
+            <li>
+              📍
+              <a
+                href="https://maps.google.com/?q=801+S+Chester+St+Little+Rock+AR+72202"
+                target="_blank"
+                style="color: inherit"
+                ><strong>The Utopia Deli</strong> — 801 S. Chester St., Little
+                Rock, AR</a
+              >
+            </li>
+            <li>🕐 <strong>Thursday</strong> — 24-hour pickup available</li>
+            <li>
+              🍱 Meals are prepared fresh Thursday morning. Have your name ready
+              when approaching the window.
+            </li>
+            <li>
+              If you're early, your order may not be ready yet. If you're late,
+              we'll hold it until close.
+            </li>
+          </ul>
+          <h4>Your Receipt</h4>
+          <ul>
+            <li>
+              A payment receipt has been sent to the email address you entered
+              at checkout.
+            </li>
+            <li>If you don't see it, check your spam or promotions folder.</li>
+          </ul>
+          <h4>Order Policy</h4>
+          <ul>
+            <li>
+              Because all meals are prepared fresh, paid orders cannot be
+              modified or canceled once submitted.
+            </li>
+          </ul>
+          <h4>Need Help?</h4>
+          <ul>
+            <li>
+              📧
+              <a href="mailto:theutopiadelilittlerock@gmail.com"
+                >theutopiadelilittlerock@gmail.com</a
+              >
+            </li>
+            <li>📞 <a href="tel:+15015515944">(501) 551-5944</a></li>
+          </ul>
+        </div>
+        <button class="btn btn-primary" onclick="window.print()">
+          Print Confirmation
+        </button>
+      </div>
+    </section>
+
+    <!-- Catering Request Form -->
+    <div class="form-container">
+      <div style="text-align: center; margin-bottom: 20px">
+        <p
+          style="font-size: 1.1rem; font-weight: 700; color: var(--ud-primary)"
+        >
+          🎉 Or Request a Custom Catering Event
+        </p>
+        <p style="font-size: 0.85rem; color: var(--text-light)">
+          For parties, meetings, weddings, and more — 10+ guests
+        </p>
+      </div>
+
+      <!-- Progress -->
+      <div class="progress-bar">
+        <div class="progress-step active" data-step="1">
+          <div class="dot">1</div>
+          <span>Event</span>
+        </div>
+        <div class="progress-step" data-step="2">
+          <div class="dot">2</div>
+          <span>Logistics</span>
+        </div>
+        <div class="progress-step" data-step="3">
+          <div class="dot">3</div>
+          <span>Budget</span>
+        </div>
+        <div class="progress-step" data-step="4">
+          <div class="dot">4</div>
+          <span>Contact</span>
+        </div>
+        <div class="progress-step" data-step="5">
+          <div class="dot">5</div>
+          <span>Food</span>
+        </div>
+      </div>
+
+      <!-- Step 1: Event Basics -->
+      <div class="form-section active" id="step-1">
+        <div class="section-title">📋 Event Details</div>
+        <div class="section-subtitle">Tell us what you're planning</div>
+
+        <div class="form-group">
+          <label>Event Name <span class="required">*</span></label>
+          <input
+            type="text"
+            id="event_name"
+            placeholder="e.g., Johnson Corp Quarterly Lunch"
+          />
+          <div class="error-msg">Please enter an event name</div>
+        </div>
+
+        <div class="form-group">
+          <label>Event Type <span class="required">*</span></label>
+          <select id="event_type">
+            <option value="">Select event type...</option>
+            <option value="corporate">Corporate / Office</option>
+            <option value="wedding">Wedding</option>
+            <option value="birthday">Birthday Party</option>
+            <option value="graduation">Graduation</option>
+            <option value="church">Church / Religious</option>
+            <option value="school">School / University</option>
+            <option value="nonprofit">Nonprofit / Community</option>
+            <option value="other">Other</option>
+          </select>
+          <div class="error-msg">Please select an event type</div>
+        </div>
+
+        <div class="form-group">
+          <label>Event Date <span class="required">*</span></label>
+          <input type="date" id="event_date" />
+          <div class="error-msg">
+            Please select a date at least 3 days from today
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Event Start Time <span class="required">*</span></label>
+          <input type="time" id="event_time" />
+          <div class="error-msg">Please select a start time</div>
+        </div>
+
+        <div class="form-group">
+          <label>Event Duration (hours) <span class="required">*</span></label>
+          <select id="event_duration">
+            <option value="">Select duration...</option>
+            <option value="1">1 hour</option>
+            <option value="1.5">1.5 hours</option>
+            <option value="2">2 hours</option>
+            <option value="3">3 hours</option>
+            <option value="4">4 hours</option>
+            <option value="5">5 hours</option>
+            <option value="6">6+ hours</option>
+          </select>
+          <div class="error-msg">Please select a duration</div>
+        </div>
+
+        <div class="form-group">
+          <label>Setup Time Needed <span class="required">*</span></label>
+          <select id="setup_time">
+            <option value="">How much earlier do we need to arrive?</option>
+            <option value="0">No setup needed (drop-off only)</option>
+            <option value="15">15 minutes before</option>
+            <option value="30">30 minutes before</option>
+            <option value="45">45 minutes before</option>
+            <option value="60">1 hour before</option>
+            <option value="90">1.5 hours before</option>
+            <option value="120">2+ hours before</option>
+          </select>
+          <div class="error-msg">Please select setup time</div>
+        </div>
+
+        <div class="btn-group">
+          <div></div>
+          <button class="btn btn-primary" onclick="nextStep(2)">
+            Next: Logistics →
+          </button>
+        </div>
+      </div>
+
+      <!-- Step 2: Logistics -->
+      <div class="form-section" id="step-2">
+        <div class="section-title">👥 People & Place</div>
+        <div class="section-subtitle">Where and how many</div>
+
+        <div class="form-group">
+          <label>Expected Headcount <span class="required">*</span></label>
+          <select id="headcount">
+            <option value="">Select headcount...</option>
+            <option value="10-20">10–20 people</option>
+            <option value="21-40">21–40 people</option>
+            <option value="41-60">41–60 people</option>
+            <option value="61-100">61–100 people</option>
+            <option value="101-150">101–150 people</option>
+            <option value="151-250">151–250 people</option>
+            <option value="250+">250+ people</option>
+          </select>
+          <div class="error-msg">
+            Please select expected headcount (minimum 10)
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Venue Name <span class="required">*</span></label>
+          <input
+            type="text"
+            id="venue_name"
+            placeholder="e.g., Johnson Corp Conference Center"
+          />
+          <div class="error-msg">Please enter a venue name</div>
+        </div>
+
+        <div class="form-group">
+          <label>Venue Address <span class="required">*</span></label>
+          <textarea
+            id="venue_address"
+            placeholder="Full street address where we'll deliver/set up"
+          ></textarea>
+          <div class="error-msg">Please enter the venue address</div>
+        </div>
+
+        <div class="form-group">
+          <label
+            >Distance from Utopia Deli
+            <span class="optional">(optional)</span></label
+          >
+          <select id="venue_distance">
+            <option value="">Select approximate distance...</option>
+            <option value="lt5">Less than 5 miles</option>
+            <option value="5-15">5–15 miles</option>
+            <option value="15-30">15–30 miles</option>
+            <option value="gt30">More than 30 miles</option>
+            <option value="unknown">Not sure</option>
+          </select>
+        </div>
+
+        <div class="btn-group">
+          <button class="btn btn-secondary" onclick="prevStep(1)">
+            ← Back
+          </button>
+          <button class="btn btn-primary" onclick="nextStep(3)">
+            Next: Budget →
+          </button>
+        </div>
+      </div>
+
+      <!-- Step 3: Budget -->
+      <div class="form-section" id="step-3">
+        <div class="section-title">💰 Budget & Payment</div>
+        <div class="section-subtitle">Help us understand your budget</div>
+
+        <div class="form-group">
+          <label>Budget Range <span class="required">*</span></label>
+          <select id="budget_range">
+            <option value="">Select budget range...</option>
+            <option value="lt300">Under $300</option>
+            <option value="300-600">$300 – $600</option>
+            <option value="600-1200">$600 – $1,200</option>
+            <option value="1200-2500">$1,200 – $2,500</option>
+            <option value="gt2500">$2,500+</option>
+            <option value="quote">Need a quote</option>
+          </select>
+          <div class="error-msg">Please select a budget range</div>
+        </div>
+
+        <div class="form-group">
+          <label>Who Is Paying? <span class="required">*</span></label>
+          <select id="who_pays">
+            <option value="">Select who pays...</option>
+            <option value="organizer">Event organizer (individual)</option>
+            <option value="attendees">Attendees pay individually</option>
+            <option value="company">Company / Institution</option>
+            <option value="unknown">Unknown / To be determined</option>
+          </select>
+          <div class="error-msg">Please select who is paying</div>
+        </div>
+
+        <div class="form-group">
+          <label
+            >Preferred Payment Timing <span class="required">*</span></label
+          >
+          <select id="payment_timing">
+            <option value="">Select payment preference...</option>
+            <option value="upfront">Pay in full upfront</option>
+            <option value="50-50">50% deposit + balance day-of</option>
+            <option value="day-of">Pay in full day-of event</option>
+            <option value="net30">Net 30 (established clients only)</option>
+          </select>
+          <div class="error-msg">Please select payment timing</div>
+        </div>
+
+        <div class="btn-group">
+          <button class="btn btn-secondary" onclick="prevStep(2)">
+            ← Back
+          </button>
+          <button class="btn btn-primary" onclick="nextStep(4)">
+            Next: Contact →
+          </button>
+        </div>
+      </div>
+
+      <!-- Step 4: Contact -->
+      <div class="form-section" id="step-4">
+        <div class="section-title">👤 Coordinator Contact</div>
+        <div class="section-subtitle">Who should we communicate with?</div>
+
+        <div class="form-group">
+          <label>Coordinator Name <span class="required">*</span></label>
+          <input type="text" id="coord_name" placeholder="Full name" />
+          <div class="error-msg">Please enter the coordinator's name</div>
+        </div>
+
+        <div class="form-group">
+          <label>Coordinator Phone <span class="required">*</span></label>
+          <input type="tel" id="coord_phone" placeholder="(501) 555-0199" />
+          <div class="error-msg">
+            Please enter a valid 10-digit phone number
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Coordinator Email <span class="required">*</span></label>
+          <input
+            type="email"
+            id="coord_email"
+            placeholder="sarah@company.com"
+          />
+          <div class="error-msg">Please enter a valid email address</div>
+        </div>
+
+        <div class="form-group">
+          <label
+            >Coordinator Role / Title
+            <span class="optional">(optional)</span></label
+          >
+          <input
+            type="text"
+            id="coord_role"
+            placeholder="e.g., Office Manager, Event Planner"
+          />
+        </div>
+
+        <div class="btn-group">
+          <button class="btn btn-secondary" onclick="prevStep(3)">
+            ← Back
+          </button>
+          <button class="btn btn-primary" onclick="nextStep(5)">
+            Next: Food Details →
+          </button>
+        </div>
+      </div>
+
+      <!-- Step 5: Food & Service -->
+      <div class="form-section" id="step-5">
+        <div class="section-title">🍽️ Food & Service Details</div>
+        <div class="section-subtitle">
+          Tell us about the food and service style
+        </div>
+
+        <div class="form-group">
+          <label>Service Style <span class="required">*</span></label>
+          <select id="service_style">
+            <option value="">Select service style...</option>
+            <option value="drop-off">Drop-off (self-serve, no staff)</option>
+            <option value="staffed-buffet">
+              Staffed buffet (we set up + serve)
+            </option>
+            <option value="plated">Plated / table service</option>
+            <option value="undecided">Not sure yet — need guidance</option>
+          </select>
+          <div class="error-msg">Please select a service style</div>
+        </div>
+
+        <div class="form-group">
+          <label
+            >Dietary Restrictions
+            <span class="optional">(check all that apply)</span></label
+          >
+          <div class="checkbox-group">
+            <div class="checkbox-item">
+              <input type="checkbox" id="diet_vegan" value="vegan" />
+              <label for="diet_vegan">Vegan</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="diet_vegetarian" value="vegetarian" />
+              <label for="diet_vegetarian">Vegetarian</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="diet_glutenfree" value="gluten-free" />
+              <label for="diet_glutenfree">Gluten-free</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="diet_nutallergy" value="nut-allergy" />
+              <label for="diet_nutallergy">Nut allergies</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="diet_halal" value="halal" />
+              <label for="diet_halal">Halal</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="diet_kosher" value="kosher" />
+              <label for="diet_kosher">Kosher</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="diet_none" value="none" />
+              <label for="diet_none">No restrictions</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label
+            >Menu Preferences / Specific Requests
+            <span class="optional">(optional)</span></label
+          >
+          <textarea
+            id="menu_prefs"
+            placeholder="e.g., Mostly chicken sandwiches, want a mix of options, prefer boxed lunches..."
+          ></textarea>
+        </div>
+
+        <div class="form-group">
+          <label
+            >Equipment Needed
+            <span class="optional">(check all that apply)</span></label
+          >
+          <div class="checkbox-group">
+            <div class="checkbox-item">
+              <input type="checkbox" id="eq_chafing" value="chafing-dishes" />
+              <label for="eq_chafing">Chafing dishes / warmers</label>
+            </div>
+            <div class="checkbox-item">
+              <input
+                type="checkbox"
+                id="eq_utensils"
+                value="serving-utensils"
+              />
+              <label for="eq_utensils">Serving utensils</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="eq_plates" value="plates-napkins" />
+              <label for="eq_plates">Plates, napkins, utensils</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="eq_tables" value="tables" />
+              <label for="eq_tables">Tables</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="eq_tablecloths" value="tablecloths" />
+              <label for="eq_tablecloths">Tablecloths / linens</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="eq_none" value="none" />
+              <label for="eq_none">None needed</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label
+            >Special Requests <span class="optional">(optional)</span></label
+          >
+          <textarea
+            id="special_requests"
+            placeholder="Anything else we should know? Allergies, timing constraints, venue access instructions..."
+          ></textarea>
+        </div>
+
+        <div class="form-group">
+          <label
+            >How Did You Hear About Us?
+            <span class="optional">(optional)</span></label
+          >
+          <select id="how_heard">
+            <option value="">Select...</option>
+            <option value="website">Our website</option>
+            <option value="instagram">Instagram</option>
+            <option value="facebook">Facebook</option>
+            <option value="referral">Friend / referral</option>
+            <option value="previous">Previous customer</option>
+            <option value="search">Google search</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>
+            <input type="checkbox" id="agree_terms" style="margin-right: 8px" />
+            I understand this is a request, not a confirmed booking. A team
+            member will confirm availability and send next steps.
+            <span class="required">*</span>
+          </label>
+          <div class="error-msg">Please agree to the terms</div>
+        </div>
+
+        <!-- Summary -->
+        <div class="summary-card">
+          <h3>📋 Event Summary</h3>
+          <div id="summary-content">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <div class="btn-group">
+          <button class="btn btn-secondary" onclick="prevStep(4)">
+            ← Back
+          </button>
+          <button
+            class="btn btn-primary"
+            id="submit-btn"
+            onclick="submitForm()"
+          >
+            Submit Catering Request
+          </button>
+        </div>
+      </div>
+
+      <!-- Success State -->
+      <div class="success-state" id="success-state">
+        <div class="success-icon">✓</div>
+        <h2>Request Submitted!</h2>
+        <p>
+          We've received your catering request and sent a confirmation email to
+          <span id="success-email"></span>
+        </p>
+        <div class="next-steps">
+          <h4>What happens next:</h4>
+          <ul>
+            <li>Our team reviews your event details</li>
+            <li>We check availability for your date</li>
+            <li>You receive an email within 24 hours</li>
+            <li>If approved, we'll send a menu + quote</li>
+            <li>50% deposit holds your date</li>
+          </ul>
+        </div>
+        <p
+          style="margin-top: 24px; font-size: 0.85rem; color: var(--text-light)"
+        >
+          Questions? Call or text us at
+          <a href="tel:5015515944" style="color: var(--ud-primary)"
+            >(501) 551-5944</a
+          >
+        </p>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <p>
+        <a href="https://theutopiadeli.com">The Utopia Deli</a> ·
+        <a
+          href="https://maps.google.com/?q=801+S+Chester+St+Little+Rock+AR+72202"
+          target="_blank"
+          >801 S. Chester, Little Rock, AR</a
+        >
+      </p>
+      <p style="font-size: 0.8rem; opacity: 0.8; margin-top: 4px">
+        <a href="tel:5015515944">(501) 551-5944</a> ·
+        <a href="mailto:theutopiadelilittlerock@gmail.com"
+          >theutopiadelilittlerock@gmail.com</a
+        >
+      </p>
+    </footer>
+
+    <script src="catering-form.js?v=7"></script>
+
+    <!-- Post-Payment Confirmation Trigger -->
+    <script src="../utopia-deli-revamp/confirmation-trigger.js?v=2"></script>
+  </body>
+</html>

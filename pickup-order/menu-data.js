@@ -10,7 +10,7 @@ const MENU = {
       name: "Cowboy Chik'n Sandwich",
       price: 1300,
       desc: "Grilled Cowboy Chik'n, Lettuce, Tomato, Ranch, Bac'n",
-      photo: 'images/cowboy_chicken.webp',
+      photo: '../images/cowboy_chicken.webp',
       modifiers: {
         sauce: [
           { code: 'C_SAUCE_BBQ', label: 'BBQ', price: 50 },
@@ -48,7 +48,7 @@ const MENU = {
       name: "Chik'n Club Sub",
       price: 1500,
       desc: "Grilled Chik'n, Bac'n, Cheese on a bed of Lettuce and Tomatoes",
-      photo: 'images/chicken_club.webp',
+      photo: '../images/chicken_club.webp',
       modifiers: {
         hold: [
           { code: 'S_HOLD_BACN', label: 'No Bac\'n', price: 0 },
@@ -86,7 +86,7 @@ const MENU = {
       name: "Chik'n Fried Chik'n Sub",
       price: 1300,
       desc: "Crispy Fried Chik'n on a hoagie with lettuce, tomato, ranch",
-      photo: 'images/chicken_fried_chikn_sub.png',
+      photo: '../images/chicken_fried_chikn_sub.png',
       modifiers: {
         hold: [
           { code: 'F_NO_BACN', label: 'No Bac\'n', price: 0 },
@@ -125,7 +125,7 @@ const MENU = {
       name: "Philly Sub",
       price: 1300,
       desc: "Stek OR Chik'n with sautéed onions & bell peppers",
-      photo: 'images/steak_philly.jpg',
+      photo: '../images/steak_philly.jpg',
       modifiers: {
         protein: [
           { code: 'P_CHIKN', label: 'Chik\'n', price: 0 },
@@ -155,18 +155,6 @@ const MENU = {
         ]
       }
     },
-    {
-      id: 'chicken-philly',
-      name: "Chik'n Philly",
-      price: 1300,
-      desc: "Chik'n with sautéed onions & bell peppers on a hoagie",
-      photo: 'images/chicken_philly.jpg',
-      modifiers: {
-        extras: [
-          { code: 'P_EXTRA_MUSHROOMS', label: 'Add Mushrooms', price: 100 },
-        ]
-      }
-    },
   ],
   specialties: [
     {
@@ -174,7 +162,7 @@ const MENU = {
       name: "Chik'n Poppers",
       price: 1000,
       desc: "Crispy chik'n dippers — choice of sauce: BBQ, Garlic Parm, Jerk, Buffalo, Lemon Pepper Wet",
-      photo: 'images/logo.png',
+      photo: '../images/chicken_poppers_v3.jpg',
       modifiers: {
         sauce: [
           { code: 'POP_SAUCE_BUFFALO', label: 'Buffalo', price: 0 },
@@ -194,7 +182,7 @@ const MENU = {
       name: 'Korean Pork Dumpling Tacos',
       price: 1000,
       desc: '"Pork", pickled slaw, aioli, and sauce on a dumpling shell. Set of 4 tacos',
-      photo: 'images/korean_pork_dumpling_tacos.jpg',
+      photo: '../images/korean_pork_dumpling_tacos.jpg',
       modifiers: {
         hold: [
           { code: 'DUMP_NO_AIOLI', label: 'No Aioli', price: 0 },
@@ -223,7 +211,7 @@ const MENU = {
       name: "Rocktown Bourbon Chik'n Sliders",
       price: 1200,
       desc: "Rocktown distillery bourbon-infused chik'n with fresh slaw and aioli on a garlic butter slider bun",
-      photo: 'images/rocktown_bourbon_slider.jpg',
+      photo: '../images/rocktown_bourbon_slider.jpg',
       modifiers: {
         hold: [
           { code: 'ROCK_NO_AIOLI', label: 'No Aioli', price: 0 },
@@ -240,7 +228,7 @@ const MENU = {
       name: "Buffalo Chik'n Sliders",
       price: 1200,
       desc: "Buffalo chik'n sliders with fresh slaw and ranch on a garlic butter slider bun",
-      photo: 'images/buffalo_chikn_slider.jpg',
+      photo: '../images/buffalo_chikn_slider.jpg',
       modifiers: {
         hold: [
           { code: 'BUFF_NO_RANCH', label: 'No Ranch', price: 0 },
@@ -259,7 +247,7 @@ const MENU = {
       name: "Plain Fries",
       price: 500,
       desc: "Crinkle-cut fries with a golden, crispy exterior",
-      photo: 'images/logo.png',
+      photo: '../images/plain_fries.avif',
       modifiers: {
         style: [
           { code: 'FRIES_PLAIN', label: 'Plain', price: 0 },
@@ -279,7 +267,7 @@ const MENU = {
       name: "Loaded Fries — Bac'n",
       price: 1300,
       desc: "Crinkle-cut fries loaded with bac'n",
-      photo: 'images/loaded_bacon_fry.jpg',
+      photo: '../images/loaded_bacon_fry.jpg',
       modifiers: {}
     },
     {
@@ -287,7 +275,7 @@ const MENU = {
       name: "Loaded Fries — Garlic Parm",
       price: 1300,
       desc: "Crinkle-cut fries loaded with garlic parmesan",
-      photo: 'images/garlic_parm_fries.jpg',
+      photo: '../images/garlic_parm_fries_v2.jpg',
       modifiers: {}
     },
     {
@@ -295,7 +283,7 @@ const MENU = {
       name: "Loaded Fries — Philly Chik'n",
       price: 1300,
       desc: "Crinkle-cut fries loaded with philly chik'n",
-      photo: 'images/loaded_bacon_fry.jpg',
+      photo: '../images/loaded_fries.webp',
       modifiers: {}
     },
     {
@@ -303,30 +291,26 @@ const MENU = {
       name: "Loaded Fries — Philly Stek",
       price: 1300,
       desc: "Crinkle-cut fries loaded with philly stek",
-      photo: 'images/loaded_bacon_fry.jpg',
+      photo: '../images/loaded_fries.webp',
       modifiers: {}
     },
     {
       id: 'cookies',
-      name: "Chocolate Chip Cookies",
+      name: "Two Chocolate Chip Cookies",
       price: 400,
       desc: "Two fresh-baked chocolate chip cookies",
-      photo: 'images/generic_cookies.jpg',
+      photo: '../images/cookies_v2.jpg',
       modifiers: {}
     },
     {
       id: 'cold-pressed-juice',
       name: "Fresh Cold-Pressed Juice",
-      price: 1000,
-      desc: "Fresh cold-pressed juice — 16 oz glass bottle",
-      photo: 'images/generic_juice.jpg',
+      price: 500,
+      desc: "Fresh cold-pressed juice — 10 oz",
+      photo: '../images/cold_pressed_juice_v2.jpg',
       modifiers: {
         flavor: [
           { code: 'JFLAV_PINEAPPLE', label: 'Pineapple Honey Crisp — Pineapple, Honeycrisp Apple, Lemon', price: 0 },
-        ],
-        size: [
-          { code: 'JUICE_SIZE_16', label: '16 oz Glass Bottle', price: 0 },
-          { code: 'JUICE_SIZE_10', label: '10 oz Plastic Bottle (-$5.00)', price: -500 },
         ]
       }
     },
@@ -335,7 +319,7 @@ const MENU = {
       name: "Bottled Water",
       price: 200,
       desc: "16 oz bottled water — crisp and refreshing",
-      photo: 'images/generic_water.jpg',
+      photo: '../images/bottled_water_v2.png',
       modifiers: {}
     },
     {
@@ -343,7 +327,7 @@ const MENU = {
       name: "Side Salad",
       price: 500,
       desc: "Fresh mixed greens with house vegetables, served with your choice of dressing",
-      photo: 'images/generic_salad.jpg',
+      photo: '../images/side_salad_v2.png',
       modifiers: {}
     },
     {
@@ -351,7 +335,7 @@ const MENU = {
       name: "Potato Chip Spirals",
       price: 500,
       desc: "Crispy potato chip spirals — seasoned and fried to perfection",
-      photo: 'images/spiral_chips.jpg',
+      photo: '../images/spiral_chips.jpg',
       modifiers: {}
     },
   ]

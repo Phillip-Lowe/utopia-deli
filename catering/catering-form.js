@@ -47,21 +47,29 @@
 
   // ===== MEAL PREP DATA =====
   const MEALS = [
-    { id: 'buffalo-chickpea', name: 'Buffalo Chickpea Ranch Bowl', calories: 490, price: 1200, photo: 'images/meal-buffalo-chickpea.jpg', desc: 'Crispy buffalo chickpeas with ranch drizzle over rice and greens' },
-    { id: 'teriyaki-tofu', name: 'Teriyaki Tofu Bowl', calories: 480, price: 1200, photo: 'images/meal-teriyaki-tofu.jpg', desc: 'Sweet teriyaki glazed tofu with steamed broccoli and rice' },
-    { id: 'red-lentil-masala', name: 'Red Lentil Coconut Masala', calories: 510, price: 1200, photo: 'images/meal-red-lentil-masala.jpg', desc: 'Spiced red lentil curry with coconut milk, tomatoes, ginger, and basmati rice' },
-    { id: 'peanut-ginger', name: 'Peanut Ginger Bowl', calories: 500, price: 1200, photo: 'images/meal-peanut-ginger.jpg', desc: 'Tofu and fresh slaw with rich peanut ginger sauce over steamed rice' },
-    { id: 'cajun-northern-beans', name: 'Cajun Northern Beans & Rice', calories: 470, price: 1200, photo: 'images/meal-cajun-northern-beans.jpg', desc: 'Smoky Cajun-spiced northern beans with peppers and seasoned rice' },
-    { id: 'rainbow-bbq-tofu', name: 'Rainbow BBQ Tofu Wild Rice', calories: 520, price: 1200, photo: 'images/meal-rainbow-bbq-tofu.jpg', desc: 'BBQ glazed tofu with wild rice, snap peas, carrots, and cashews' }
+    { id: 'street-corn', name: 'Street Corn Taco Bowl', calories: 470, price: 1200, photo: '', icon: '🌮', desc: 'Cilantro lime rice, chipotle lentil taco crumble, roasted corn, black beans, pickled onions, chipotle crema' },
+    { id: 'nashville-hot', name: 'Nashville Hot Lentil Bowl', calories: 480, price: 1200, photo: '', icon: '🌶️', desc: 'Garlic rice, Nashville hot lentils, roasted broccoli, ranch drizzle' },
+    { id: 'mediterranean', name: 'Mediterranean Harvest Bowl', calories: 500, price: 1200, photo: 'images/meal-mediterranean-harvest.jpg', icon: '🥗', desc: 'Lemon herb quinoa, crispy oregano chickpeas, cucumber tomato salad, hummus, tahini drizzle, pickled red onion' },
+    { id: 'thai-peanut', name: 'Thai Peanut Crunch Bowl', calories: 490, price: 1200, photo: 'images/meal-thai-peanut-crunch.jpg', icon: '🥜', desc: 'Jasmine rice, crispy peanut tofu, sesame cabbage slaw, sweet chili peanut drizzle' },
+    { id: 'cajun-red-beans', name: 'Cajun Red Beans & Dirty Rice Bowl', calories: 460, price: 1200, photo: '', icon: '🍛', desc: 'Dirty rice, Cajun beans, peppers & onions, green onion garnish' },
+    { id: 'bbq-potato', name: 'Loaded BBQ Potato Bowl', calories: 510, price: 1200, photo: '', icon: '🥔', desc: 'Roasted potatoes, BBQ lentil crumble, broccoli, smoked cheeze sauce, green onions' },
+    { id: 'eggplant-parm', name: 'Eggplant Parmesan', calories: 530, price: 1200, photo: 'images/meal-eggplant-parm.jpg', icon: '🍆', desc: 'Parmesan crusted eggplant layered with fragrant homemade marinara sauce, topped with fresh basil' }
   ];
 
   const DESSERTS = [
-    { id: 'raspberry-mousse', name: 'Raspberry Dark Chocolate Mousse', calories: 340, price: 600, photo: 'images/dessert-raspberry-mousse.jpg', desc: 'Rich dark chocolate mousse topped with fresh raspberries' }
+    { id: 'mango-chia', name: 'Mango Chia Seed Pudding', calories: 280, price: 600, photo: 'images/dessert-mango-chia.jpg', icon: '🥭', desc: 'Creamy mango chia pudding made with coconut milk and fresh mango' },
+    { id: 'raspberry-mousse', name: 'Raspberry Dark Chocolate Mousse', calories: 340, price: 600, photo: 'images/dessert-raspberry-mousse.jpg', icon: '🍫', desc: 'Rich dark chocolate mousse topped with fresh raspberries — sugar free' },
+    { id: 'apple-pie', name: 'Apple Pie', calories: 310, price: 600, photo: 'images/apple-pie.jpg', icon: '🍎', desc: 'Classic spiced apple pie — sugar free' }
   ];
 
+  const DRINKS = [
+    { id: 'cold-pressed-juice', name: 'Fresh Cold-Pressed Juice', calories: 120, price: 500, photo: 'images/cold_pressed_juice_v2.jpg', desc: '10 oz — Pineapple, Honeycrisp Apple, Lemon' }
+  ];
+
+  const MEALS_PER_PACKAGE = 7;
   const LABOR_FEE = 5000; // $50.00 in cents
-  const TAX_RATE = 0.065;
-  let mpCart = {}; // meal/dessert id -> qty
+  const TAX_RATE = 0.0952;
+  let mpCart = {}; // meal/dessert id -> qty (now just 0/1 toggle per meal type)
 
   // ===== STATE =====
   let currentStep = 1;
@@ -75,52 +83,79 @@
     const dessertGrid = document.getElementById('dessert-grid');
     if (!mealGrid) return;
 
-    // Render meals
+    // Render meals with icon or photo
     MEALS.forEach(function(meal) {
       const card = document.createElement('div');
       card.className = 'meal-card';
       card.id = 'meal-' + meal.id;
+      var imgHtml;
+      if (meal.photo && meal.photo.trim() !== '') {
+        imgHtml = '<img src="' + meal.photo + '" alt="' + meal.name + '" loading="lazy">';
+      } else {
+        imgHtml = '<img src="images/meal-placeholder.png" alt="' + meal.name + '" loading="lazy" style="height:180px;object-fit:cover;">';
+      }
       card.innerHTML =
-        '<img src="' + meal.photo + '" alt="' + meal.name + '" loading="lazy">' +
+        imgHtml +
         '<div class="meal-card-body">' +
           '<h3>' + meal.name + '</h3>' +
-          '<div class="cal">' + meal.calories + ' cal \u00b7 ' + meal.desc + '</div>' +
-          '<div class="price">$' + (meal.price / 100).toFixed(2) + '</div>' +
-          '<div class="meal-qty">' +
-            '<button onclick="setMealQty(\'' + meal.id + '\', -1)">-</button>' +
-            '<span id="qty-' + meal.id + '">0</span>' +
-            '<button onclick="setMealQty(\'' + meal.id + '\', 1)">+</button>' +
-          '</div>' +
+          '<div class="cal">' + meal.calories + ' cal · ' + meal.desc + '</div>' +
+          '<div class="price">$12.00 per meal</div>' +
         '</div>';
       mealGrid.appendChild(card);
     });
 
-    // Render desserts
-    if (dessertGrid) {
-      DESSERTS.forEach(function(dessert) {
+    // Render add-ons (dessert + juice) in single-item grid
+    const addonGrid = document.getElementById('addon-grid');
+    if (addonGrid) {
+      [...DESSERTS, ...DRINKS].forEach(function(item) {
         const card = document.createElement('div');
-        card.className = 'meal-card dessert-card';
-        card.id = 'meal-' + dessert.id;
+        card.className = 'meal-card addon-card';
+        card.id = 'addon-' + item.id;
+        var imgHtml;
+        if (item.photo && item.photo.trim() !== '') {
+          imgHtml = '<img src="' + item.photo + '" alt="' + item.name + '" loading="lazy">';
+        } else {
+          imgHtml = '<img src="images/dessert-placeholder.png" alt="' + item.name + '" loading="lazy" style="height:160px;object-fit:cover;">';
+        }
         card.innerHTML =
-          '<img src="' + dessert.photo + '" alt="' + dessert.name + '" loading="lazy">' +
+          imgHtml +
           '<div class="meal-card-body">' +
-            '<h3>' + dessert.name + '</h3>' +
-            '<div class="cal">' + dessert.calories + ' cal \u00b7 ' + dessert.desc + '</div>' +
-            '<div class="price">$' + (dessert.price / 100).toFixed(2) + '</div>' +
+            '<h3>' + item.name + '</h3>' +
+            '<div class="cal">' + item.calories + ' cal \u00b7 ' + item.desc + '</div>' +
+            '<div class="price">$' + (item.price / 100).toFixed(2) + ' each</div>' +
             '<div class="meal-qty">' +
-              '<button onclick="setMealQty(\'' + dessert.id + '\', -1)">-</button>' +
-              '<span id="qty-' + dessert.id + '">0</span>' +
-              '<button onclick="setMealQty(\'' + dessert.id + '\', 1)">+</button>' +
+              '<button onclick="updateAddonQty(\'' + item.id + '\', -1)">\u2212</button>' +
+              '<span id="addon-qty-' + item.id + '">0</span>' +
+              '<button onclick="updateAddonQty(\'' + item.id + '\', 1)">+</button>' +
             '</div>' +
           '</div>';
-        dessertGrid.appendChild(card);
+        addonGrid.appendChild(card);
       });
     }
 
     updateMPTotals();
   }
 
-  window.setMealQty = function(id, delta) {
+  window.addWeeklyPackage = function() {
+    // Add one complete set of all meals
+    const currentSets = mpCart['weekly_sets'] || 0;
+    mpCart['weekly_sets'] = currentSets + 1;
+    updateMPTotals();
+  };
+
+  window.removeWeeklyPackage = function() {
+    const currentSets = mpCart['weekly_sets'] || 0;
+    if (currentSets > 0) {
+      if (currentSets === 1) {
+        delete mpCart['weekly_sets'];
+      } else {
+        mpCart['weekly_sets'] = currentSets - 1;
+      }
+    }
+    updateMPTotals();
+  };
+
+  window.updateAddonQty = function(id, delta) {
     const current = mpCart[id] || 0;
     const next = Math.max(0, current + delta);
     if (next === 0) {
@@ -128,10 +163,9 @@
     } else {
       mpCart[id] = next;
     }
-    const qtyEl = document.getElementById('qty-' + id);
+    // Update display
+    const qtyEl = document.getElementById('addon-qty-' + id);
     if (qtyEl) qtyEl.textContent = next;
-    const cardEl = document.getElementById('meal-' + id);
-    if (cardEl) cardEl.classList.toggle('selected', next > 0);
     updateMPTotals();
   };
 
@@ -139,8 +173,34 @@
     const totalsDiv = document.getElementById('mp-totals');
     const rowsDiv = document.getElementById('mp-totals-rows');
     const checkoutDiv = document.getElementById('mp-checkout');
+    const weeklyQtyEl = document.getElementById('weekly-package-qty');
+    const dessertQtyEl = document.getElementById('dessert-package-qty');
 
-    const totalItems = Object.values(mpCart).reduce(function(a, b) { return a + b; }, 0);
+    const weeklySets = mpCart['weekly_sets'] || 0;
+
+    // Sum individual add-on quantities
+    let addonQty = 0;
+    let addonSubtotal = 0;
+    [...DESSERTS, ...DRINKS].forEach(function(item) {
+      const qty = mpCart[item.id] || 0;
+      if (qty > 0) {
+        addonQty += qty;
+        addonSubtotal += qty * item.price;
+      }
+    });
+
+    // Update the displayed quantities
+    if (weeklyQtyEl) weeklyQtyEl.textContent = weeklySets;
+
+    const totalItems = weeklySets + addonQty;
+
+    // Must have at least 1 weekly set to enable addons
+    const hasMealSet = weeklySets > 0;
+    // Show/hide addon section based on meal set selection
+    const addonSection = document.getElementById('addon-section');
+    if (addonSection) {
+      addonSection.style.display = hasMealSet ? 'block' : 'none';
+    }
 
     if (totalItems === 0) {
       totalsDiv.style.display = 'none';
@@ -156,32 +216,33 @@
     let subtotal = 0;
     let rows = '';
 
-    // Meals
-    MEALS.forEach(function(meal) {
-      const qty = mpCart[meal.id];
-      if (qty) {
-        const lineTotal = qty * meal.price;
+    // Calculate based on weekly sets
+    if (weeklySets > 0) {
+      // Each weekly set = all 6 meals (1 of each type) at $12 each
+      const weeklySubtotal = weeklySets * MEALS.length * MEALS[0].price;
+      subtotal += weeklySubtotal;
+      rows += '<div class="totals-row"><span>Weekly Meal Prep (' + weeklySets + ' set' + (weeklySets > 1 ? 's' : '') + ')</span><span>$' + (weeklySubtotal / 100).toFixed(2) + '</span></div>';
+    }
+
+    // Individual add-ons (desserts + drinks)
+    [...DESSERTS, ...DRINKS].forEach(function(item) {
+      const qty = mpCart[item.id] || 0;
+      if (qty > 0) {
+        const lineTotal = qty * item.price;
         subtotal += lineTotal;
-        rows += '<div class="totals-row"><span>' + meal.name + ' \u00d7 ' + qty + '</span><span>$' + (lineTotal / 100).toFixed(2) + '</span></div>';
+        rows += '<div class="totals-row"><span>' + item.name + ' (' + qty + ')</span><span>$' + (lineTotal / 100).toFixed(2) + '</span></div>';
       }
     });
 
-    // Desserts
-    DESSERTS.forEach(function(dessert) {
-      const qty = mpCart[dessert.id];
-      if (qty) {
-        const lineTotal = qty * dessert.price;
-        subtotal += lineTotal;
-        rows += '<div class="totals-row"><span>' + dessert.name + ' \u00d7 ' + qty + '</span><span>$' + (lineTotal / 100).toFixed(2) + '</span></div>';
-      }
-    });
-
-    const labor = LABOR_FEE;
+    // Labor: static $50 if any meal set ordered; $0 otherwise
+    const labor = hasMealSet ? LABOR_FEE : 0;
     const tax = Math.round((subtotal + labor) * TAX_RATE);
     const total = subtotal + labor + tax;
 
-    rows += '<div class="totals-row"><span>Labor \u0026 Packaging</span><span>$50.00</span></div>';
-    rows += '<div class="totals-row"><span>Tax (6.5%)</span><span>$' + (tax / 100).toFixed(2) + '</span></div>';
+    if (labor > 0) {
+      rows += '<div class="totals-row"><span>Labor & Packaging</span><span>$' + (labor / 100).toFixed(2) + '</span></div>';
+    }
+    rows += '<div class="totals-row"><span>Tax (9.52%)</span><span>$' + (tax / 100).toFixed(2) + '</span></div>';
     rows += '<div class="totals-row"><span>Total</span><span>$' + (total / 100).toFixed(2) + '</span></div>';
 
     rowsDiv.innerHTML = rows;
@@ -221,26 +282,47 @@
     // Build line items from cart
     let subtotal = 0;
     const lineItems = [];
+    let packageCount = 0;
 
-    MEALS.forEach(function(meal) {
-      const qty = mpCart[meal.id];
-      if (qty) {
-        const lineTotal = qty * meal.price;
+    const weeklySets = mpCart['weekly_sets'] || 0;
+
+    // Each weekly set = all 6 meals (1 of each type)
+    if (weeklySets > 0) {
+      packageCount += weeklySets;
+      MEALS.forEach(function(meal) {
+        // Each set includes 1 of each meal type
+        const lineTotal = weeklySets * meal.price;
         subtotal += lineTotal;
-        lineItems.push({ id: meal.id, name: meal.name, qty: qty, price: meal.price, calories: meal.calories, category: 'meal' });
+        lineItems.push({ 
+          id: meal.id, 
+          name: meal.name, 
+          qty: weeklySets, // Number of each meal type ordered
+          price: meal.price, 
+          calories: meal.calories, 
+          category: 'meal' 
+        });
+      });
+    }
+
+    // Individual add-ons (desserts + drinks)
+    [...DESSERTS, ...DRINKS].forEach(function(item) {
+      const qty = mpCart[item.id] || 0;
+      if (qty > 0) {
+        const lineTotal = qty * item.price;
+        subtotal += lineTotal;
+        lineItems.push({ 
+          id: item.id, 
+          name: item.name, 
+          qty: qty, 
+          price: item.price, 
+          calories: item.calories, 
+          category: item.id === 'raspberry-mousse' ? 'dessert' : 'drink'
+        });
       }
     });
 
-    DESSERTS.forEach(function(dessert) {
-      const qty = mpCart[dessert.id];
-      if (qty) {
-        const lineTotal = qty * dessert.price;
-        subtotal += lineTotal;
-        lineItems.push({ id: dessert.id, name: dessert.name, qty: qty, price: dessert.price, calories: dessert.calories, category: 'dessert' });
-      }
-    });
-
-    const labor = LABOR_FEE;
+    // Labor: static $50 if any meal set ordered; $0 otherwise
+    const labor = weeklySets > 0 ? LABOR_FEE : 0;
     const tax = Math.round((subtotal + labor) * TAX_RATE);
     const total = subtotal + labor + tax;
 

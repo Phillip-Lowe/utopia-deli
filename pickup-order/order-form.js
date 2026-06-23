@@ -224,12 +224,18 @@ function updateCart() {
 
   if (content) {
     content.innerHTML = `
-      ${cart.map((item, idx) => `
+      ${cart.map((item, idx) => {
+        const comboMod = item.modifiers.find(m => m.code && m.code.includes('COMBO'));
+        const otherMods = item.modifiers.filter(m => !m.code || !m.code.includes('COMBO'));
+        return `
         <div class="cart-item">
           <div class="cart-item-info">
             <h4>${item.qty}x ${item.name}</h4>
-            ${item.modifiers.length ? `
-              <div class="cart-mods">${item.modifiers.map(m => m.label).join(', ')}</div>
+            ${comboMod ? `
+              <div class="cart-combo">🍟 COMBO: ${comboMod.label.replace('Add ', '')}</div>
+            ` : ''}
+            ${otherMods.length ? `
+              <div class="cart-mods">${otherMods.map(m => m.label).join(' • ')}</div>
             ` : ''}
           </div>
           <div style="display:flex;align-items:center;gap:12px">
@@ -237,7 +243,7 @@ function updateCart() {
             <button onclick="removeFromCart(${idx})" style="background:none;border:none;cursor:pointer;font-size:16px;color:var(--text-light)">🗑️</button>
           </div>
         </div>
-      `).join('')}
+      `}).join('')}
       <div class="cart-totals">
         <div class="total-row">
           <span>Subtotal</span>
@@ -387,7 +393,12 @@ async function handleCheckout(e) {
       item_id: cartItem.id,
       name: cartItem.name,
       qty: cartItem.qty,
-      price: parseFloat(unitPriceDollars.toFixed(2))
+      price: parseFloat(unitPriceDollars.toFixed(2)),
+      modifiers: cartItem.modifiers.map(m => ({
+        code: m.code,
+        label: m.label,
+        price_delta: (m.price || 0) / 100
+      }))
     };
   });
 
