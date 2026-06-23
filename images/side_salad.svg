@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="400" height="400">
+  <!-- Side Salad -->
+  <!-- Bowl -->
+  <!-- Bowl back rim -->
+  <ellipse cx="100" cy="105" rx="65" ry="25" fill="#C8A882" stroke="#A67B5B" stroke-width="3"/>
+  
+  <!-- Bowl body -->
+  <path d="M 35,105 Q 35,175 100,175 Q 165,175 165,105" fill="#D4B896" stroke="#A67B5B" stroke-width="3"/>
+  
+  <!-- Bowl front rim line -->
+  <path d="M 35,105 Q 100,135 165,105" fill="none" stroke="#A67B5B" stroke-width="2"/>
+  
+  <!-- Leaf 1 -->
+  <path d="M 55,90 Q 45,70 65,60 Q 80,55 85,70 Q 80,85 65,85 Z" fill="#5B8C5A" stroke="#3D5C3D" stroke-width="2"/>
+  <!-- Leaf 2 -->
+  <path d="M 90,80 Q 85,60 100,55 Q 120,50 125,65 Q 120,80 105,80 Z" fill="#6BAF6B" stroke="#3D5C3D" stroke-width="2"/>
+  
+  <!-- Leaf 3 -->
+  <path d="M 120,85 Q 115,65 135,60 Q 150,55 155,70 Q 150,85 135,85 Z" fill="#5B8C5A" stroke="#3D5C3D" stroke-width="2"/>
+  
+  <!-- Leaf 4 -->
+  <path d="M 75,75 Q 70,55 85,50 Q 100,45 105,60 Q 100,75 85,75 Z" fill="#4A7A4A" stroke="#3D5C3D" stroke-width="2"/>
+  
+  <!-- Tomato 1 -->
+  <ellipse cx="70" cy="90" rx="14" ry="10" fill="#E85D5D" stroke="#C0392B" stroke-width="2"/>
+  <!-- Tomato 2 -->
+  <ellipse cx="140" cy="92" rx="12" ry="9" fill="#E85D5D" stroke="#C0392B" stroke-width="2"/>
+  
+  <!-- Cucumber -->
+  <rect x="90" y="88" width="25" height="10" rx="5" fill="#90C695" stroke="#5A8A5F" stroke-width="2"/>
+  
+  <!-- Feta cheese cube -->
+  <rect x="110" y="82" width="12" height="12" rx="2" fill="#F5F5F5" stroke="#DDD" stroke-width="1"/>
+  <!-- Feta cheese cube 2 -->
+  <rect x="55" y="85" width="10" height="10" rx="2" fill="#F5F5F5" stroke="#DDD" stroke-width="1"/>
+</svg>
