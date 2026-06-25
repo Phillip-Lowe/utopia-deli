@@ -47,12 +47,12 @@
 
   // ===== MEAL PREP DATA =====
   const MEALS = [
-    { id: 'street-corn', name: 'Street Corn Taco Bowl', calories: 470, price: 1200, photo: '', icon: '🌮', desc: 'Cilantro lime rice, chipotle lentil taco crumble, roasted corn, black beans, pickled onions, chipotle crema' },
-    { id: 'nashville-hot', name: 'Nashville Hot Lentil Bowl', calories: 480, price: 1200, photo: '', icon: '🌶️', desc: 'Garlic rice, Nashville hot lentils, roasted broccoli, ranch drizzle' },
+    { id: 'street-corn', name: 'Street Corn Taco Bowl', calories: 470, price: 1200, photo: 'images/meal-street-corn.jpg', icon: '🌮', desc: 'Cilantro lime rice, chipotle lentil taco crumble, roasted corn, black beans, pickled onions, chipotle crema' },
+    { id: 'nashville-hot', name: 'Nashville Hot Lentil Bowl', calories: 480, price: 1200, photo: 'images/meal-nashville-hot.jpg', icon: '🌶️', desc: 'Garlic rice, Nashville hot lentils, roasted broccoli, ranch drizzle' },
     { id: 'mediterranean', name: 'Mediterranean Harvest Bowl', calories: 500, price: 1200, photo: 'images/meal-mediterranean-harvest.jpg', icon: '🥗', desc: 'Lemon herb quinoa, crispy oregano chickpeas, cucumber tomato salad, hummus, tahini drizzle, pickled red onion' },
     { id: 'thai-peanut', name: 'Thai Peanut Crunch Bowl', calories: 490, price: 1200, photo: 'images/meal-thai-peanut-crunch.jpg', icon: '🥜', desc: 'Jasmine rice, crispy peanut tofu, sesame cabbage slaw, sweet chili peanut drizzle' },
-    { id: 'cajun-red-beans', name: 'Cajun Red Beans & Dirty Rice Bowl', calories: 460, price: 1200, photo: '', icon: '🍛', desc: 'Dirty rice, Cajun beans, peppers & onions, green onion garnish' },
-    { id: 'bbq-potato', name: 'Loaded BBQ Potato Bowl', calories: 510, price: 1200, photo: '', icon: '🥔', desc: 'Roasted potatoes, BBQ lentil crumble, broccoli, smoked cheeze sauce, green onions' },
+    { id: 'cajun-red-beans', name: 'Cajun Red Beans & Dirty Rice Bowl', calories: 460, price: 1200, photo: 'images/meal-cajun-red-beans.jpg', icon: '🍛', desc: 'Dirty rice, Cajun beans, peppers & onions, green onion garnish' },
+    { id: 'bbq-potato', name: 'Loaded BBQ Potato Bowl', calories: 510, price: 1200, photo: 'images/meal-bbq-potato.jpg', icon: '🥔', desc: 'Roasted potatoes, BBQ lentil crumble, broccoli, smoked cheeze sauce, green onions' },
     { id: 'eggplant-parm', name: 'Eggplant Parmesan', calories: 530, price: 1200, photo: 'images/meal-eggplant-parm.jpg', icon: '🍆', desc: 'Parmesan crusted eggplant layered with fragrant homemade marinara sauce, topped with fresh basil' }
   ];
 
