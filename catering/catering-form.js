@@ -47,13 +47,13 @@
 
   // ===== MEAL PREP DATA =====
   const MEALS = [
-    { id: 'street-corn', name: 'Street Corn Taco Bowl', calories: 470, price: 1200, photo: 'images/meal-street-corn.jpg', icon: '🌮', desc: 'Cilantro lime rice, chipotle lentil taco crumble, roasted corn, black beans, pickled onions, chipotle crema' },
-    { id: 'nashville-hot', name: 'Nashville Hot Lentil Bowl', calories: 480, price: 1200, photo: 'images/meal-nashville-hot.jpg', icon: '🌶️', desc: 'Garlic rice, Nashville hot lentils, roasted broccoli, ranch drizzle' },
-    { id: 'mediterranean', name: 'Mediterranean Harvest Bowl', calories: 500, price: 1200, photo: 'images/meal-mediterranean-harvest.jpg', icon: '🥗', desc: 'Lemon herb quinoa, crispy oregano chickpeas, cucumber tomato salad, hummus, tahini drizzle, pickled red onion' },
-    { id: 'thai-peanut', name: 'Thai Peanut Crunch Bowl', calories: 490, price: 1200, photo: 'images/meal-thai-peanut-crunch.jpg', icon: '🥜', desc: 'Jasmine rice, crispy peanut tofu, sesame cabbage slaw, sweet chili peanut drizzle' },
-    { id: 'cajun-red-beans', name: 'Cajun Red Beans & Dirty Rice Bowl', calories: 460, price: 1200, photo: 'images/meal-cajun-red-beans.jpg', icon: '🍛', desc: 'Dirty rice, Cajun beans, peppers & onions, green onion garnish' },
-    { id: 'bbq-potato', name: 'Loaded BBQ Potato Bowl', calories: 510, price: 1200, photo: 'images/meal-bbq-potato.jpg', icon: '🥔', desc: 'Roasted potatoes, BBQ lentil crumble, broccoli, smoked cheeze sauce, green onions' },
-    { id: 'eggplant-parm', name: 'Eggplant Parmesan', calories: 530, price: 1200, photo: 'images/meal-eggplant-parm.jpg', icon: '🍆', desc: 'Parmesan crusted eggplant layered with fragrant homemade marinara sauce, topped with fresh basil' }
+    { id: 'lemon-chickpea-orzo', name: 'Lemon Chickpea Orzo', calories: 480, price: 1200, photo: '', icon: '🍋', desc: 'Tender orzo tossed with roasted chickpeas, wilted spinach, garlic, fresh lemon, herbs, and a light lemon buttery sauce' },
+    { id: 'creamy-mushroom-wild-rice', name: 'Creamy Mushroom Wild Rice', calories: 510, price: 1200, photo: '', icon: '🍄', desc: 'A rich blend of wild rice, sautéed mushrooms, caramelized onions, garlic, and spinach folded into a silky herb cream sauce' },
+    { id: 'mediterranean-pasta-salad', name: 'Mediterranean Pasta Salad', calories: 450, price: 1200, photo: '', icon: '🥗', desc: 'Rotini pasta tossed with crisp cucumbers, juicy tomatoes, red onion, chickpeas, fresh herbs, and a vibrant lemon vinaigrette. Served chilled' },
+    { id: 'buffalo-chickpea-caesar-wrap', name: 'Buffalo Chickpea Caesar Wrap', calories: 530, price: 1200, photo: '', icon: '🌯', desc: 'Crispy buffalo chickpeas layered with crisp romaine, shaved parmesan-style cheeze, crunchy onions, and creamy Caesar dressing, all wrapped in a soft tortilla' },
+    { id: 'baked-veg-lasagna-rollups', name: 'Baked Vegetable Lasagna Roll-Ups', calories: 550, price: 1200, photo: '', icon: '🍝', desc: 'Lasagna noodles rolled around a creamy tofu ricotta with spinach, roasted vegetables, herbs, and marinara, then baked until bubbly and finished with melty vegan mozzarella' },
+    { id: 'bourbon-bbq-lentil-meatloaf', name: 'Bourbon BBQ Lentil Meatloaf', calories: 520, price: 1200, photo: '', icon: '🥃', desc: 'A smoky lentil meatloaf glazed with sweet bourbon-style BBQ sauce and served alongside creamy garlic mashed potatoes and roasted green beans' },
+    { id: 'sweet-sticky-orange-tofu', name: 'Sweet & Sticky Orange Tofu', calories: 490, price: 1200, photo: '', icon: '🍊', desc: 'Crispy tofu tossed in a house-made orange garlic glaze with fresh ginger, citrus zest, and a touch of chili, served with fragrant jasmine rice and charred seasonal vegetables' }
   ];
 
   const DESSERTS = [
