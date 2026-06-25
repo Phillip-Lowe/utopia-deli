@@ -57,8 +57,6 @@
   ];
 
   const DESSERTS = [
-    { id: 'mango-chia', name: 'Mango Chia Seed Pudding', calories: 280, price: 600, photo: 'images/dessert-mango-chia.jpg', icon: '🥭', desc: 'Creamy mango chia pudding made with coconut milk and fresh mango' },
-    { id: 'raspberry-mousse', name: 'Raspberry Dark Chocolate Mousse', calories: 340, price: 600, photo: 'images/dessert-raspberry-mousse.jpg', icon: '🍫', desc: 'Rich dark chocolate mousse topped with fresh raspberries — sugar free' },
     { id: 'apple-pie', name: 'Apple Pie', calories: 310, price: 600, photo: 'images/apple-pie.jpg', icon: '🍎', desc: 'Classic spiced apple pie — sugar free' }
   ];
 
