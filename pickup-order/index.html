@@ -1317,19 +1317,21 @@
         content.innerHTML = `
     ${cart
       .map(
-        (item, idx) => `
+        (item, idx) => {
+          const comboMods = item.modifiers.filter(m => m.group === 'combo' || (m.code && m.code.includes('COMBO')));
+          const otherMods = item.modifiers.filter(m => m.group !== 'combo' && !(m.code && m.code.includes('COMBO')));
+          return `
       <div class="cart-item">
         <div class="cart-item-info">
           <h4>${item.qty}x ${item.name}</h4>
-          ${
-            item.modifiers.length
-              ? `
+          ${comboMods.length ? `
+            <div class="cart-combo">🍟 COMBO: ${comboMods.map(m => m.label.replace('Add ', '')).join(' + ')}</div>
+          ` : ''}
+          ${otherMods.length ? `
             <div class="cart-mods">
-              ${item.modifiers.map((m) => `<span class="cart-mod-tag">${m.label}${m.price > 0 ? ` (+$${formatPrice(m.price)})` : ""}</span>`).join(" ")}
+              ${otherMods.map((m) => `<span class="cart-mod-tag">${m.label}${m.price > 0 ? ` (+$${formatPrice(m.price)})` : ""}</span>`).join(" ")}
             </div>
-          `
-              : ""
-          }
+          ` : ""}
           <div style="font-size:11px;color:var(--text-light);margin-top:4px;">
             Unit: $${formatPrice(item.unitPrice)} × ${item.qty}
           </div>
@@ -1339,7 +1341,7 @@
           <button onclick="removeFromCart(${idx})" style="background:none;border:none;cursor:pointer;font-size:16px;color:var(--text-light)">🗑️</button>
         </div>
       </div>
-    `,
+    `},
       )
       .join("")}
     <div class="cart-totals">

@@ -156,9 +156,21 @@ function addToCart(id) {
     const code = btn.dataset.code;
     if (item.modifiers && item.modifiers[group]) {
       const opt = item.modifiers[group].find(o => o.code === code);
-      if (opt) mods.push(opt);
+      if (opt) mods.push({...opt, group});
     }
   });
+
+  // Sort modifiers by importance (protein first, combo second, etc)
+  const groupPriority = {
+    protein: 1,
+    combo: 2,
+    extras: 3,
+    addons: 3,
+    sauce: 4,
+    special: 5,
+    hold: 99
+  };
+  mods.sort((a, b) => (groupPriority[a.group] || 50) - (groupPriority[b.group] || 50));
 
   const modPrice = mods.reduce((s, m) => s + (m.price || 0), 0);
   const unitPrice = item.price + modPrice;
@@ -225,14 +237,14 @@ function updateCart() {
   if (content) {
     content.innerHTML = `
       ${cart.map((item, idx) => {
-        const comboMod = item.modifiers.find(m => m.code && m.code.includes('COMBO'));
-        const otherMods = item.modifiers.filter(m => !m.code || !m.code.includes('COMBO'));
+        const comboMods = item.modifiers.filter(m => m.group === 'combo' || (m.code && m.code.includes('COMBO')));
+        const otherMods = item.modifiers.filter(m => m.group !== 'combo' && !(m.code && m.code.includes('COMBO')));
         return `
         <div class="cart-item">
           <div class="cart-item-info">
             <h4>${item.qty}x ${item.name}</h4>
-            ${comboMod ? `
-              <div class="cart-combo">🍟 COMBO: ${comboMod.label.replace('Add ', '')}</div>
+            ${comboMods.length ? `
+              <div class="cart-combo">🍟 COMBO: ${comboMods.map(m => m.label.replace('Add ', '')).join(' + ')}</div>
             ` : ''}
             ${otherMods.length ? `
               <div class="cart-mods">${otherMods.map(m => m.label).join(' • ')}</div>
@@ -440,7 +452,7 @@ async function handleCheckout(e) {
       showAlert('error', result.message || 'Something went wrong. Please try again or call us.');
     } else {
       showConfirmation(
-        result.message || 'We sent your payment link. Check your email (SMS if needed).',
+        result.message || 'Click the payment link below to complete your order. We\'ll start preparing your food once payment is completed.',
         result.payment_link
       );
     }
@@ -465,6 +477,27 @@ function showConfirmation(message, paymentLink) {
 
   const confirmation = document.createElement('div');
   confirmation.id = 'confirmationPage';
+  
+  // Build order summary HTML
+  const orderItemsHtml = cart.map(item => {
+    const comboMod = item.modifiers.find(m => m.code && m.code.includes('COMBO'));
+    const otherMods = item.modifiers.filter(m => !m.code || !m.code.includes('COMBO'));
+    return `
+      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eee;">
+        <div style="text-align:left;">
+          <strong>${item.qty}x ${item.name}</strong>
+          ${comboMod ? `<div style="color:#AF3D4B;font-size:13px;">🍟 COMBO: ${comboMod.label.replace('Add ', '')}</div>` : ''}
+          ${otherMods.length ? `<div style="color:#6B7280;font-size:12px;">${otherMods.map(m => m.label).join(' • ')}</div>` : ''}
+        </div>
+        <span style="font-weight:600;">$${formatPrice(item.totalPrice)}</span>
+      </div>
+    `;
+  }).join('');
+  
+  const subtotal = cart.reduce((s, i) => s + i.totalPrice, 0);
+  const tax = Math.round(subtotal * TAX_RATE);
+  const grand = subtotal + tax;
+  
   confirmation.innerHTML = `
     <div style="max-width:448px;margin:40px auto;padding:24px;background:#fff;border-radius:14px;box-shadow:0 4px 24px rgba(17,24,39,0.08);text-align:center;">
       <div style="font-size:48px;margin-bottom:16px;">🎉</div>
@@ -473,6 +506,24 @@ function showConfirmation(message, paymentLink) {
         Click the payment link below to complete your payment.<br>
         We'll start working on your order once payment is completed.
       </p>
+      
+      <div style="text-align:left;margin:20px 0;padding:16px;background:#f9f9f9;border-radius:8px;">
+        <h3 style="font-size:16px;color:#590B3F;margin-bottom:12px;text-align:center;">Your Order</h3>
+        ${orderItemsHtml}
+        <div style="display:flex;justify-content:space-between;padding:8px 0;margin-top:8px;border-top:2px solid #590B3F;">
+          <span>Subtotal</span>
+          <span>$${formatPrice(subtotal)}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:4px 0;color:#6B7280;">
+          <span>Tax (est.)</span>
+          <span>$${formatPrice(tax)}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:4px 0;font-weight:800;font-size:18px;color:#590B3F;">
+          <span>Total</span>
+          <span>$${formatPrice(grand)}</span>
+        </div>
+      </div>
+      
       <p style="font-size:14px;color:#374151;margin-bottom:24px;">${message}</p>
       ${paymentLink ? `<a href="${paymentLink}" target="_blank" style="display:inline-block;background:#AF3D4B;color:#fff;padding:14px 32px;border-radius:50px;font-weight:700;font-size:16px;text-decoration:none;margin-bottom:16px;">💳 Pay Now</a>` : ''}
       <p style="font-size:12px;color:#9CA3AF;">Didn't receive the email? Check your spam folder or call us.</p>
