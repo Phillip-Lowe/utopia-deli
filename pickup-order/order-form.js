@@ -394,7 +394,7 @@ async function handleCheckout(e) {
       base_price_cents: Math.round(cartItem.unitPrice),
       modifiers: cartItem.modifiers.map(m => ({
         label: m.label,
-        price_delta: (m.price || 0) / 100
+        price_cents: m.code.includes('COMBO') ? 0 : (m.price || 0)
       }))
     };
   });
@@ -463,10 +463,10 @@ function showConfirmation(message, paymentLink) {
   confirmation.innerHTML = `
     <div style="max-width:448px;margin:40px auto;padding:24px;background:#fff;border-radius:14px;box-shadow:0 4px 24px rgba(17,24,39,0.08);text-align:center;">
       <div style="font-size:48px;margin-bottom:16px;">🎉</div>
-      <h2 style="font-size:24px;font-weight:800;color:#590B3F;margin-bottom:12px;">We Got You!</h2>
+      <h2 style="font-size:24px;font-weight:800;color:#590B3F;margin-bottom:12px;">Order Received!</h2>
       <p style="font-size:16px;color:#6B7280;margin-bottom:24px;line-height:1.5;">
-        We've received your order and emailed you a secure payment link.<br>
-        Your order will be confirmed after payment is completed.
+        Click the payment link below to complete your payment.<br>
+        We'll start working on your order once payment is completed.
       </p>
       <p style="font-size:14px;color:#374151;margin-bottom:24px;">${message}</p>
       ${paymentLink ? `<a href="${paymentLink}" target="_blank" style="display:inline-block;background:#AF3D4B;color:#fff;padding:14px 32px;border-radius:50px;font-weight:700;font-size:16px;text-decoration:none;margin-bottom:16px;">💳 Pay Now</a>` : ''}
