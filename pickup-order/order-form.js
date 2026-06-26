@@ -182,6 +182,7 @@ function addToCart(id) {
     qty,
     unitPrice,
     totalPrice,
+    price: item.price,  // Raw item price without modifiers
     modifiers: mods,
   });
 
@@ -403,7 +404,7 @@ async function handleCheckout(e) {
     return {
       name: cartItem.name,
       qty: cartItem.qty,
-      base_price_cents: cartItem.unitPrice,
+      base_price_cents: cartItem.price || cartItem.unitPrice,
       modifiers: cartItem.modifiers.map(m => ({
         label: m.label,
         price_cents: m.code.includes('COMBO') ? 0 : (m.price || 0)
