@@ -1389,11 +1389,11 @@
           id: cartItem.id,
           name: cartItem.name,
           qty: cartItem.qty,
-          base_price_cents: cartItem.unitPrice,
+          base_price_cents: cartItem.price || cartItem.unitPrice - cartItem.modifiers.reduce((s, m) => s + (m.price || 0), 0),
           modifiers: cartItem.modifiers.map((m) => ({
             code: m.code,
             label: m.label,
-            price_cents: m.price || 0,
+            price_cents: m.code && m.code.includes('COMBO') ? 0 : (m.price || 0),
           })),
         }));
 
