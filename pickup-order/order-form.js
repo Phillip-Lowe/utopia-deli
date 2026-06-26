@@ -386,45 +386,36 @@ async function handleCheckout(e) {
     return;
   }
 
-  // Build payload per WEBHOOK-DOCS.md v1.0.2 (flat fields, dollars not cents)
-  const order_items = cart.map(cartItem => {
-    const unitPriceDollars = cartItem.unitPrice / 100;
+  // Build payload for V4 workflow (cents, flat structure)
+  const items = cart.map(cartItem => {
     return {
-      item_id: cartItem.id,
       name: cartItem.name,
       qty: cartItem.qty,
-      price: parseFloat(unitPriceDollars.toFixed(2)),
+      base_price_cents: Math.round(cartItem.unitPrice),
       modifiers: cartItem.modifiers.map(m => ({
-        code: m.code,
         label: m.label,
         price_delta: (m.price || 0) / 100
       }))
     };
   });
 
-  const subtotalCents = cart.reduce((s, i) => s + i.totalPrice, 0);
-  const taxCents = Math.round(subtotalCents * TAX_RATE);
-  const totalCents = subtotalCents + taxCents;
-
   const payload = {
-    customer_name: customerName,
-    email: email,
-    phone: phone,
-    order_items: order_items,
-    subtotal: parseFloat((subtotalCents / 100).toFixed(2)),
-    tax: parseFloat((taxCents / 100).toFixed(2)),
-    total: parseFloat((totalCents / 100).toFixed(2)),
-    pickup_time: pickupTime || 'ASAP',
-    special_instructions: specialInstructions,
-    source: 'pickup-order',
-    timestamp: new Date().toISOString()
+    body: {
+      customer: {
+        name: customerName,
+        email: email,
+        phone: phone
+      },
+      items: items,
+      notes: specialInstructions || ''
+    }
   };
 
   // Debug log (remove in prod)
   console.log('Webhook payload:', payload);
 
   try {
-    const response = await fetch('https://utopia-api.systack.net/webhook/utopia-deli-html-order-v1', {
+    const response = await fetch('https://n8n.systack.net/webhook/utopia-deli-order-v4', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
