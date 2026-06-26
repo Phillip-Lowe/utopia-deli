@@ -388,10 +388,15 @@ async function handleCheckout(e) {
 
   // Build payload for V4 workflow (cents, flat structure)
   const items = cart.map(cartItem => {
+    // Calculate combo modifier total to subtract from base price
+    const comboModTotal = cartItem.modifiers
+      .filter(m => m.code && m.code.includes('COMBO'))
+      .reduce((s, m) => s + (m.price || 0), 0);
+    
     return {
       name: cartItem.name,
       qty: cartItem.qty,
-      base_price_cents: Math.round(cartItem.unitPrice),
+      base_price_cents: Math.round(cartItem.unitPrice - comboModTotal),
       modifiers: cartItem.modifiers.map(m => ({
         label: m.label,
         price_cents: m.code.includes('COMBO') ? 0 : (m.price || 0)
