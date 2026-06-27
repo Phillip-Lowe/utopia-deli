@@ -1252,13 +1252,7 @@
           // No required modifiers, add with empty modifiers
         }
 
-        const modPrice = mods.reduce((s, m) => {
-          // Combo modifiers are included (free), don't add to price
-          if (m.group === 'combo' || (m.code && m.code.includes('COMBO'))) {
-            return s;
-          }
-          return s + (m.price || 0);
-        }, 0);
+        const modPrice = mods.reduce((s, m) => s + (m.price || 0), 0);
         const unitPrice = item.price + modPrice;
         const totalPrice = unitPrice * qty;
 
@@ -1342,7 +1336,7 @@
             </div>
           ` : ""}
           ${comboMods.length ? `
-            <div class="cart-combo">🍟 COMBO: ${comboMods.map(m => m.label.replace('Add ', '')).join(' + ')} <span style="color:var(--text-light);font-size:10px;">(included)</span></div>
+            <div class="cart-combo">🍟 COMBO: ${comboMods.map(m => m.label.replace('Add ', '')).join(' + ')}</div>
           ` : ''}
           <div style="font-size:11px;color:var(--text-light);margin-top:4px;">
             Unit: $${formatPrice(item.unitPrice)} × ${item.qty}
