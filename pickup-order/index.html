@@ -1385,17 +1385,33 @@
         const form = new FormData(e.target);
 
         // Build full cart payload (all items, modifiers, quantities)
-        const items = cart.map((cartItem) => ({
-          id: cartItem.id,
-          name: cartItem.name,
-          qty: cartItem.qty,
-          base_price_cents: cartItem.price || cartItem.unitPrice - cartItem.modifiers.reduce((s, m) => s + (m.price || 0), 0),
-          modifiers: cartItem.modifiers.map((m) => ({
-            code: m.code,
-            label: m.label,
-            price_cents: m.code && m.code.includes('COMBO') ? 0 : (m.price || 0),
-          })),
-        }));
+        const items = cart.map((cartItem) => {
+          // Separate combo modifiers from regular modifiers
+          const comboMods = cartItem.modifiers.filter(m => m.code && m.code.includes('COMBO'));
+          const regularMods = cartItem.modifiers.filter(m => !m.code || !m.code.includes('COMBO'));
+          
+          // Combo price to subtract from base (so combo shows as separate line item)
+          const comboPrice = comboMods.reduce((s, m) => s + (m.price || 0), 0);
+          
+          return {
+            id: cartItem.id,
+            name: cartItem.name,
+            qty: cartItem.qty,
+            base_price_cents: (cartItem.price || cartItem.unitPrice) - comboPrice,
+            modifiers: [
+              ...comboMods.map((m) => ({
+                code: m.code,
+                label: m.label,
+                price_cents: m.price || 0,  // Show actual combo price
+              })),
+              ...regularMods.map((m) => ({
+                code: m.code,
+                label: m.label,
+                price_cents: m.price || 0,
+              }))
+            ],
+          };
+        });
 
         // Calculate frontend total for validation (server recalculates)
         const subtotal = cart.reduce((s, i) => s + i.totalPrice, 0);
