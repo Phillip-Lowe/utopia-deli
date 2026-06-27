@@ -835,8 +835,8 @@
       <aside class="sidebar-left">
         <!-- CHECKOUT -->
         <div class="checkout-panel" id="checkoutPanel" style="display: none">
-          <div class="panel-title">📋 Checkout</div>
-          <form id="checkoutForm" onsubmit="handleCheckout(event)">
+          <div class="panel-title">📋 Your Info</div>
+          <div id="checkoutForm">
             <div class="form-group">
               <label>Full Name <span class="required">*</span></label>
               <input
@@ -886,10 +886,7 @@
                 placeholder="Allergies, dietary needs, extra requests..."
               ></textarea>
             </div>
-            <button type="submit" class="submit-btn" id="submitBtn">
-              💳 Send Payment Link
-            </button>
-          </form>
+          </div>
         </div>
       </aside>
 
@@ -1429,6 +1426,11 @@
         <span>$${formatPrice(grand)}</span>
       </div>
     </div>
+    <div style="margin-top:16px;">
+      <button onclick="submitOrder()" class="submit-btn" id="cartCheckoutBtn" style="width:100%;">
+        💳 Checkout
+      </button>
+    </div>
   `;
       }
 
@@ -1439,8 +1441,7 @@
       }
 
       // ===================== CHECKOUT =====================
-      async function handleCheckout(e) {
-        e.preventDefault();
+      async function submitOrder() {
         if (cart.length === 0) {
           showAlert(
             "error",
@@ -1449,7 +1450,24 @@
           return;
         }
 
-        const btn = document.getElementById("submitBtn");
+        // Get values from form inputs
+        const formDiv = document.getElementById("checkoutForm");
+        const name = formDiv.querySelector('input[name="name"]')?.value || '';
+        const phone = formDiv.querySelector('input[name="phone"]')?.value || '';
+        const email = formDiv.querySelector('input[name="email"]')?.value || '';
+        const notes = formDiv.querySelector('textarea[name="notes"]')?.value || '';
+
+        // Validate required fields
+        if (!name || !phone || !email) {
+          showAlert("error", "Please fill in your name, phone, and email in the checkout form.");
+          // Scroll to checkout form
+          document.getElementById("checkoutPanel").scrollIntoView({ behavior: "smooth", block: "center" });
+          return;
+        }
+
+        const btn = document.getElementById("cartCheckoutBtn");
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner"></span> Processing...';
         btn.disabled = true;
         btn.innerHTML = '<span class="spinner"></span> Sending...';
 
@@ -1482,9 +1500,9 @@
 
         const payload = {
           customer: {
-            name: form.get("name"),
-            email: form.get("email"),
-            phone: form.get("phone"),
+            name: name,
+            email: email,
+            phone: phone,
           },
           items: items,
           totals: {
@@ -1492,7 +1510,7 @@
             tax_cents: tax,
             total_cents: frontend_total_cents,
           },
-          notes: form.get("notes") || "",
+          notes: notes,
           source: "web",
         };
 
@@ -1583,7 +1601,7 @@
           );
         } finally {
           btn.disabled = false;
-          btn.innerHTML = "💳 Send Payment Link";
+          btn.innerHTML = "💳 Checkout";
         }
       }
 
