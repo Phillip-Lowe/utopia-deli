@@ -242,25 +242,6 @@
         grid-template-columns: 1fr 340px;
         gap: 32px;
         align-items: start;
-        margin-right: 420px;
-      }
-      .menu-scrollable {
-        max-height: calc(100vh - 120px);
-        overflow-y: auto;
-        padding-right: 10px;
-      }
-      .menu-scrollable::-webkit-scrollbar {
-        width: 6px;
-      }
-      .menu-scrollable::-webkit-scrollbar-track {
-        background: transparent;
-      }
-      .menu-scrollable::-webkit-scrollbar-thumb {
-        background: rgba(89, 11, 63, 0.3);
-        border-radius: 3px;
-      }
-      .menu-scrollable::-webkit-scrollbar-thumb:hover {
-        background: rgba(89, 11, 63, 0.5);
       }
 
       /* ===== MENU SECTIONS ===== */
@@ -468,26 +449,8 @@
 
       /* ===== SIDEBAR ===== */
       .sidebar {
-        position: fixed;
-        right: calc((100vw - 1200px) / 2 + 20px);
+        position: sticky;
         top: 100px;
-        width: 380px;
-        max-height: calc(100vh - 120px);
-        overflow-y: auto;
-        z-index: 100;
-      }
-      .sidebar::-webkit-scrollbar {
-        width: 6px;
-      }
-      .sidebar::-webkit-scrollbar-track {
-        background: transparent;
-      }
-      .sidebar::-webkit-scrollbar-thumb {
-        background: rgba(89, 11, 63, 0.3);
-        border-radius: 3px;
-      }
-      .sidebar::-webkit-scrollbar-thumb:hover {
-        background: rgba(89, 11, 63, 0.5);
       }
       .cart-panel,
       .checkout-panel {
@@ -801,7 +764,7 @@
     <!-- MAIN -->
     <main class="main">
       <!-- MENU -->
-      <div class="menu-side menu-scrollable">
+      <div class="menu-side">
         <!-- ALERTS -->
         <div class="alert alert-success" id="alertSuccess"></div>
         <div class="alert alert-error" id="alertError"></div>
