@@ -769,7 +769,7 @@
       <!-- LEFT SIDEBAR (CONTACT) -->
       <aside class="sidebar-left">
         <!-- CHECKOUT -->
-        <div class="checkout-panel" id="checkoutPanel" style="display: none">
+        <div class="checkout-panel" id="checkoutPanel" style="display: block">
           <div class="panel-title">📋 Your Info</div>
           <div id="checkoutForm">
             <div class="form-group">
@@ -1299,7 +1299,7 @@
 
         if (totalQty === 0) {
           badge.style.display = "none";
-          checkoutPanel.style.display = "none";
+          // Keep checkoutPanel visible for contact info
           content.innerHTML = `
       <div class="cart-empty">
         <div class="emoji">🛒</div>
