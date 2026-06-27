@@ -1556,18 +1556,18 @@
       <div style="background:linear-gradient(135deg, #590B3F 0%, #7a1a55 50%, #754681 100%);color:white;padding:32px 24px;border-radius:14px 14px 0 0;text-align:center;margin:-24px -24px 24px -24px;">
         <div style="font-size:56px;margin-bottom:12px;">🎉</div>
         <h2 style="font-size:28px;font-weight:800;margin:0 0 8px 0;">We Got You!</h2>
-        <p style="font-size:16px;opacity:0.9;margin:0;">We're firing up the kitchen for you.</p>
+        <p style="font-size:16px;opacity:0.9;margin:0;">We've received your order.</p>
       </div>
       
       <div style="text-align:center;margin-bottom:20px;">
         <div style="display:inline-block;background:#f5e6d0;color:#590B3F;padding:10px 18px;border-radius:8px;font-weight:700;font-size:14px;">
-          📋 Order for ${customerName || 'You'}
+          📋 Your Order
         </div>
       </div>
       
       <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #eee;">
         <span style="color:#6B7280;font-size:14px;">Pickup Time</span>
-        <span style="font-weight:600;font-size:14px;">${pickupTime === 'ASAP' ? 'ASAP' : pickupTime}</span>
+        <span style="font-weight:600;font-size:14px;">25 - 30 mins</span>
       </div>
       
       <h3 style="font-size:16px;font-weight:700;color:#590B3F;margin:20px 0 12px 0;">Your Order</h3>
@@ -1600,7 +1600,13 @@
       </div>
     </div>
   `;
-        document.body.appendChild(confirmation);
+        // Insert before footer instead of appending to body
+        const footer = document.getElementById('pageFooter');
+        if (footer) {
+          document.body.insertBefore(confirmation, footer);
+        } else {
+          document.body.appendChild(confirmation);
+        }
         window.scrollTo(0, 0);
       }
 
