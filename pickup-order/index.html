@@ -1256,6 +1256,17 @@
         const unitPrice = item.price + modPrice;
         const totalPrice = unitPrice * qty;
 
+        // DEBUG: Log what we're adding
+        console.log('Adding to cart:', {
+          item: item.name,
+          basePrice: item.price,
+          modifiers: mods.map(m => ({ label: m.label, price: m.price, group: m.group })),
+          modPrice,
+          unitPrice,
+          qty,
+          totalPrice
+        });
+
         cart.push({
           id: item.id,
           name: item.name,
