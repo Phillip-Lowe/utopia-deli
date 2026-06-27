@@ -1133,7 +1133,7 @@
         }
 
         // ADD selection
-        groupList.push(opt);
+        groupList.push({ ...opt, group });
         btn.classList.add("active");
         updateModifierUI(group, rules);
         console.log('Modifier added, current selected:', selectedModifiers);
