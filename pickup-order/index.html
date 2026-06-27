@@ -813,14 +813,6 @@
                 emails.
               </p>
             </div>
-            <div class="form-group">
-              <label>Special Instructions</label>
-              <textarea
-                class="form-input notes-area"
-                name="notes"
-                placeholder="Allergies, dietary needs, extra requests..."
-              ></textarea>
-            </div>
           </div>
         </div>
       </aside>
@@ -1361,7 +1353,15 @@
         <span>$${formatPrice(grand)}</span>
       </div>
     </div>
-    <div style="margin-top:16px;">
+    <div style="margin-top:12px;">
+      <label style="display:block;font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px;">Special Instructions</label>
+      <textarea
+        id="cartNotes"
+        style="width:100%;padding:8px 10px;border:1.5px solid var(--input-border);border-radius:var(--radius-sm);font-size:13px;font-family:inherit;min-height:60px;resize:vertical;"
+        placeholder="Allergies, dietary needs, extra requests..."
+      ></textarea>
+    </div>
+    <div style="margin-top:12px;">
       <button onclick="submitOrder()" class="submit-btn" id="cartCheckoutBtn" style="width:100%;">
         💳 Checkout
       </button>
@@ -1390,7 +1390,7 @@
         const name = formDiv.querySelector('input[name="name"]')?.value || '';
         const phone = formDiv.querySelector('input[name="phone"]')?.value || '';
         const email = formDiv.querySelector('input[name="email"]')?.value || '';
-        const notes = formDiv.querySelector('textarea[name="notes"]')?.value || '';
+        const notes = document.getElementById("cartNotes")?.value || '';
 
         // Validate required fields
         if (!name || !phone || !email) {
