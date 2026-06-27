@@ -1252,7 +1252,13 @@
           // No required modifiers, add with empty modifiers
         }
 
-        const modPrice = mods.reduce((s, m) => s + (m.price || 0), 0);
+        const modPrice = mods.reduce((s, m) => {
+          // Combo modifiers are included (free), don't add to price
+          if (m.group === 'combo' || (m.code && m.code.includes('COMBO'))) {
+            return s;
+          }
+          return s + (m.price || 0);
+        }, 0);
         const unitPrice = item.price + modPrice;
         const totalPrice = unitPrice * qty;
 
