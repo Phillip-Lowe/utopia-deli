@@ -79,7 +79,7 @@
         box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
       }
       .header-inner {
-        max-width: 960px;
+        max-width: 1200px;
         margin: 0 auto;
         padding: 0 20px;
         display: flex;
@@ -235,11 +235,11 @@
 
       /* ===== MAIN LAYOUT ===== */
       .main {
-        max-width: 960px;
+        max-width: 1200px;
         margin: 0 auto;
         padding: 40px 20px;
         display: grid;
-        grid-template-columns: 1fr 340px;
+        grid-template-columns: 300px 1fr 340px;
         gap: 32px;
         align-items: start;
       }
@@ -448,9 +448,11 @@
       }
 
       /* ===== SIDEBAR ===== */
-      .sidebar {
+      .sidebar-left,
+      .sidebar-right {
         position: sticky;
         top: 100px;
+        align-self: start;
       }
       .cart-panel,
       .checkout-panel {
@@ -694,7 +696,8 @@
         .main {
           grid-template-columns: 1fr;
         }
-        .sidebar {
+        .sidebar-left,
+        .sidebar-right {
           position: static;
           order: -1;
         }
@@ -828,8 +831,87 @@
         <div class="menu-grid" id="sidesGrid"></div>
       </div>
 
-      <!-- SIDEBAR -->
-      <aside class="sidebar">
+      <!-- LEFT SIDEBAR (CART) -->
+      <aside class="sidebar-left">
+        <!-- CART -->
+        <div class="cart-panel" id="cartPanel">
+          <div class="panel-title">🛒 Your Order</div>
+          <div id="cartContent">
+            <div class="cart-empty">
+              <div class="emoji">🛒</div>
+              <p>Your cart is empty.<br />Select an item to get started.</p>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- MENU -->
+      <div class="menu-side">
+        <!-- ALERTS -->
+        <div class="alert alert-success" id="alertSuccess"></div>
+        <div class="alert alert-error" id="alertError"></div>
+
+        <!-- SANDWICHES -->
+        <h3 class="section-title">
+          <span class="icon"
+            ><img
+              src="../images/icon-sandwich.svg"
+              alt=""
+              style="
+                width: 28px;
+                height: 28px;
+                vertical-align: middle;
+                margin-right: 6px;
+              "
+          /></span>
+          Sandwiches & Subs
+        </h3>
+        <p class="section-sub">
+          Chose your favorites from our selection of sandwiches and subs.
+        </p>
+        <div class="menu-grid" id="sandwichGrid"></div>
+
+        <!-- SPECIALTIES -->
+        <h3 class="section-title">
+          <span class="icon"
+            ><img
+              src="../images/icon-specialties.svg"
+              alt=""
+              style="
+                width: 28px;
+                height: 28px;
+                vertical-align: middle;
+                margin-right: 6px;
+              "
+          /></span>
+          House Specialties
+        </h3>
+        <p class="section-sub">
+          Unique creations you won't find anywhere else.
+        </p>
+        <div class="menu-grid" id="specialtyGrid"></div>
+
+        <!-- SIDES & EXTRAS -->
+        <h3 class="section-title">
+          <span class="icon"
+            ><img
+              src="../images/icon-sides.svg"
+              alt=""
+              style="
+                width: 28px;
+                height: 28px;
+                vertical-align: middle;
+                margin-right: 6px;
+              "
+          /></span>
+          Sides & Extras
+        </h3>
+        <p class="section-sub">Complete your meal with these add-ons.</p>
+        <div class="menu-grid" id="sidesGrid"></div>
+      </div>
+
+      <!-- RIGHT SIDEBAR (CHECKOUT) -->
+      <aside class="sidebar-right">
         <!-- CART -->
         <div class="cart-panel" id="cartPanel">
           <div class="panel-title">🛒 Your Order</div>
