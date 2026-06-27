@@ -1257,11 +1257,7 @@
           // No required modifiers, add with empty modifiers
         }
 
-        const modPrice = mods.reduce((s, m) => {
-          // Combo modifiers are display-only, don't charge for them
-          const isCombo = m.group === 'combo' || (m.code && m.code.includes('COMBO'));
-          return s + (isCombo ? 0 : (m.price || 0));
-        }, 0);
+        const modPrice = mods.reduce((s, m) => s + (m.price || 0), 0);
         const unitPrice = item.price + modPrice;
         const totalPrice = unitPrice * qty;
 
@@ -1389,17 +1385,26 @@
         const form = new FormData(e.target);
 
         // Build full cart payload (all items, modifiers, quantities)
-        const items = cart.map((cartItem) => ({
-          id: cartItem.id,
-          name: cartItem.name,
-          qty: cartItem.qty,
-          base_price_cents: cartItem.price || cartItem.unitPrice,
-          modifiers: cartItem.modifiers.map((m) => ({
-            code: m.code,
-            label: m.label,
-            price_cents: m.price || 0,
-          })),
-        }));
+        const items = cart.map((cartItem) => {
+          // Calculate base price without combo modifiers (to prevent double-charging in Square)
+          const comboPrice = cartItem.modifiers.reduce((s, m) => {
+            const isCombo = m.group === 'combo' || (m.code && m.code.includes('COMBO'));
+            return s + (isCombo ? (m.price || 0) : 0);
+          }, 0);
+          const basePrice = (cartItem.price || cartItem.unitPrice) - comboPrice;
+          
+          return {
+            id: cartItem.id,
+            name: cartItem.name,
+            qty: cartItem.qty,
+            base_price_cents: basePrice,
+            modifiers: cartItem.modifiers.map((m) => ({
+              code: m.code,
+              label: m.label,
+              price_cents: m.price || 0,
+            })),
+          };
+        });
 
         // Calculate frontend total for validation (server recalculates)
         const subtotal = cart.reduce((s, i) => s + i.totalPrice, 0);
