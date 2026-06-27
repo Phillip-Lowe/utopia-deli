@@ -401,27 +401,14 @@ async function handleCheckout(e) {
 
   // Build payload for V4 workflow (cents, flat structure)
   const items = cart.map(cartItem => {
-    // Separate combo modifiers from regular modifiers
-    const comboMods = cartItem.modifiers.filter(m => m.code && m.code.includes('COMBO'));
-    const regularMods = cartItem.modifiers.filter(m => !m.code || !m.code.includes('COMBO'));
-    
-    // Combo price to subtract from base (so combo shows as separate line item)
-    const comboPrice = comboMods.reduce((s, m) => s + (m.price || 0), 0);
-    
     return {
       name: cartItem.name,
       qty: cartItem.qty,
-      base_price_cents: (cartItem.price || cartItem.unitPrice) - comboPrice,
-      modifiers: [
-        ...comboMods.map(m => ({
-          label: m.label,
-          price_cents: m.price || 0  // Show actual combo price
-        })),
-        ...regularMods.map(m => ({
-          label: m.label,
-          price_cents: m.price || 0
-        }))
-      ]
+      base_price_cents: cartItem.price || cartItem.unitPrice,
+      modifiers: cartItem.modifiers.map(m => ({
+        label: m.label,
+        price_cents: m.price || 0
+      }))
     };
   });
 
