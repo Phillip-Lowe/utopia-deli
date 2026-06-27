@@ -1093,7 +1093,6 @@
         const item = findItem(selectedItem);
         const opt = item.modifiers[group].find((o) => o.code === code);
 
-        console.log('toggleMod called:', { group, code, opt, selectedItem });
 
         // Get rules for this group
         const rules = GROUP_RULES[group] || { min: 0, max: 99, type: "ADD" };
@@ -1111,7 +1110,6 @@
           groupList.splice(existsIndex, 1);
           btn.classList.remove("active");
           updateModifierUI(group, rules);
-          console.log('Modifier removed, current selected:', selectedModifiers);
           return;
         }
 
@@ -1136,7 +1134,6 @@
         groupList.push({ ...opt, group });
         btn.classList.add("active");
         updateModifierUI(group, rules);
-        console.log('Modifier added, current selected:', selectedModifiers);
       }
 
       // Update modifier UI: counters and disabled states
@@ -1235,7 +1232,13 @@
           if (!validateRequiredGroups(item)) {
             return; // STOP if validation fails
           }
-          mods = Object.values(selectedModifiers).flat();
+          mods = Array.from(
+            new Map(
+              Object.values(selectedModifiers)
+                .flat()
+                .map(m => [m.code, m])
+            ).values()
+          );
           qty = itemQty;
         } else if (item.modifiers) {
           // Item has modifiers but isn't selected - need to check if any are REQUIRED
@@ -1261,7 +1264,6 @@
         const totalPrice = unitPrice * qty;
 
         // DEBUG: Log what we're adding
-        console.log('Adding to cart:', {
           item: item.name,
           basePrice: item.price,
           modifiers: mods.map(m => ({ label: m.label, price: m.price, group: m.group })),
@@ -1328,8 +1330,8 @@
     ${cart
       .map(
         (item, idx) => {
-          const comboMods = item.modifiers.filter(m => m.group === 'combo' || (m.code && m.code.includes('COMBO')));
-          const otherMods = item.modifiers.filter(m => m.group !== 'combo' && !(m.code && m.code.includes('COMBO')));
+          const comboMods = item.modifiers.filter(m => m.group === 'combo');
+          const otherMods = item.modifiers.filter(m => m.group !== 'combo');
           return `
       <div class="cart-item">
         <div class="cart-item-info">
@@ -1523,7 +1525,6 @@
           );
 
           // Log success for analytics
-          console.log("Order submitted successfully:", {
             order_id: result.order_id || "unknown",
             items: payload.items.length,
             total_cents: payload.totals.total_cents,
@@ -1570,8 +1571,8 @@
 
         // Build order items HTML
         const orderItemsHtml = cart.map((item) => {
-          const comboMods = item.modifiers.filter(m => m.group === 'combo' || (m.code && m.code.includes('COMBO')));
-          const otherMods = item.modifiers.filter(m => m.group !== 'combo' && !(m.code && m.code.includes('COMBO')));
+          const comboMods = item.modifiers.filter(m => m.group === 'combo');
+          const otherMods = item.modifiers.filter(m => m.group !== 'combo');
           return `
       <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #eee;">
         <div style="text-align:left;">
