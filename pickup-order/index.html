@@ -737,7 +737,7 @@
           </a>
           <div class="brand-text">
             <h1 id="brandName">The Utopia Deli</h1>
-            <span id="brandTagline">It's just good food</span>
+            <span id="brandTagline">It's just good food!</span>
           </div>
         </div>
         <div style="display: flex; gap: 10px; align-items: center">
@@ -1093,7 +1093,6 @@
         const item = findItem(selectedItem);
         const opt = item.modifiers[group].find((o) => o.code === code);
 
-
         // Get rules for this group
         const rules = GROUP_RULES[group] || { min: 0, max: 99, type: "ADD" };
 
@@ -1236,8 +1235,8 @@
             new Map(
               Object.values(selectedModifiers)
                 .flat()
-                .map(m => [m.code, m])
-            ).values()
+                .map((m) => [m.code, m]),
+            ).values(),
           );
           qty = itemQty;
         } else if (item.modifiers) {
@@ -1318,22 +1317,29 @@
 
         content.innerHTML = `
     ${cart
-      .map(
-        (item, idx) => {
-          const comboMods = item.modifiers.filter(m => m.group === 'combo');
-          const otherMods = item.modifiers.filter(m => m.group !== 'combo');
-          return `
+      .map((item, idx) => {
+        const comboMods = item.modifiers.filter((m) => m.group === "combo");
+        const otherMods = item.modifiers.filter((m) => m.group !== "combo");
+        return `
       <div class="cart-item">
         <div class="cart-item-info">
           <h4>${item.qty}x ${item.name}</h4>
-          ${otherMods.length ? `
+          ${
+            otherMods.length
+              ? `
             <div class="cart-mods">
               ${otherMods.map((m) => `<span class="cart-mod-tag">${m.label}${m.price > 0 ? ` (+$${formatPrice(m.price)})` : ""}</span>`).join(" ")}
             </div>
-          ` : ""}
-          ${comboMods.length ? `
-            <div class="cart-combo">🍟 COMBO: ${comboMods.map(m => m.label.replace('Add ', '')).join(' + ')}</div>
-          ` : ''}
+          `
+              : ""
+          }
+          ${
+            comboMods.length
+              ? `
+            <div class="cart-combo">🍟 COMBO: ${comboMods.map((m) => m.label.replace("Add ", "")).join(" + ")}</div>
+          `
+              : ""
+          }
           <div style="font-size:11px;color:var(--text-light);margin-top:4px;">
             Unit: $${formatPrice(item.unitPrice)} × ${item.qty}
           </div>
@@ -1343,8 +1349,8 @@
           <button onclick="removeFromCart(${idx})" style="background:none;border:none;cursor:pointer;font-size:16px;color:var(--text-light)">🗑️</button>
         </div>
       </div>
-    `},
-      )
+    `;
+      })
       .join("")}
     <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">
       <label style="display:block;font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px;">Special Instructions</label>
@@ -1394,16 +1400,21 @@
 
         // Get values from form inputs
         const formDiv = document.getElementById("checkoutForm");
-        const name = formDiv.querySelector('input[name="name"]')?.value || '';
-        const phone = formDiv.querySelector('input[name="phone"]')?.value || '';
-        const email = formDiv.querySelector('input[name="email"]')?.value || '';
-        const notes = document.getElementById("cartNotes")?.value || '';
+        const name = formDiv.querySelector('input[name="name"]')?.value || "";
+        const phone = formDiv.querySelector('input[name="phone"]')?.value || "";
+        const email = formDiv.querySelector('input[name="email"]')?.value || "";
+        const notes = document.getElementById("cartNotes")?.value || "";
 
         // Validate required fields
         if (!name || !phone || !email) {
-          showAlert("error", "Please fill in your name, phone, and email in the checkout form.");
+          showAlert(
+            "error",
+            "Please fill in your name, phone, and email in the checkout form.",
+          );
           // Scroll to checkout form
-          document.getElementById("checkoutPanel").scrollIntoView({ behavior: "smooth", block: "center" });
+          document
+            .getElementById("checkoutPanel")
+            .scrollIntoView({ behavior: "smooth", block: "center" });
           return;
         }
 
@@ -1432,7 +1443,7 @@
               code: m.code || m.mod_id,
               label: m.label || m.mod_name,
               price_cents: m.price || m.price_delta_cents || 0,
-              group: m.group || m.group_id
+              group: m.group || m.group_id,
             })),
           };
         });
@@ -1455,7 +1466,7 @@
             total_cents: frontend_total_cents,
           },
           notes: notes,
-          source: "web",
+          source: "pickup-order",
         };
 
         try {
@@ -1503,7 +1514,6 @@
               "We Got You! Follow the link below to complete your secure payment. We will begin preparing your order once payment is complete.",
             result.square_link || result.payment_link || result.payment_url,
           );
-
         } catch (err) {
           // Network / CORS / unexpected error
 
@@ -1540,24 +1550,28 @@
         const tax = Math.round(subtotal * 0.0952);
         const grand = subtotal + tax;
         const form = document.getElementById("checkoutForm");
-        const customerName = form?.querySelector('input[name="name"]')?.value || '';
-        const pickupTime = form?.querySelector('select[name="pickupTime"]')?.value || 'ASAP';
+        const customerName =
+          form?.querySelector('input[name="name"]')?.value || "";
+        const pickupTime =
+          form?.querySelector('select[name="pickupTime"]')?.value || "ASAP";
 
         // Build order items HTML
-        const orderItemsHtml = cart.map((item) => {
-          const comboMods = item.modifiers.filter(m => m.group === 'combo');
-          const otherMods = item.modifiers.filter(m => m.group !== 'combo');
-          return `
+        const orderItemsHtml = cart
+          .map((item) => {
+            const comboMods = item.modifiers.filter((m) => m.group === "combo");
+            const otherMods = item.modifiers.filter((m) => m.group !== "combo");
+            return `
       <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #eee;">
         <div style="text-align:left;">
           <div style="font-weight:600;font-size:14px;">${item.qty}× ${item.name}</div>
-          ${comboMods.length ? `<div style="color:#AF3D4B;font-size:12px;margin-top:2px;">🍟 COMBO: ${comboMods.map(m => m.label.replace('Add ', '')).join(' + ')} <span style="color:#6B7280;">(included)</span></div>` : ''}
-          ${otherMods.length ? `<div style="color:#6B7280;font-size:12px;margin-top:2px;">${otherMods.map(m => m.label).join(' • ')}</div>` : ''}
+          ${comboMods.length ? `<div style="color:#AF3D4B;font-size:12px;margin-top:2px;">🍟 COMBO: ${comboMods.map((m) => m.label.replace("Add ", "")).join(" + ")} <span style="color:#6B7280;">(included)</span></div>` : ""}
+          ${otherMods.length ? `<div style="color:#6B7280;font-size:12px;margin-top:2px;">${otherMods.map((m) => m.label).join(" • ")}</div>` : ""}
         </div>
         <span style="font-weight:700;color:#AF3D4B;font-size:14px;white-space:nowrap;">$${formatPrice(item.totalPrice)}</span>
       </div>
     `;
-        }).join('');
+          })
+          .join("");
 
         const confirmation = document.createElement("div");
         confirmation.id = "confirmationPage";
@@ -1571,7 +1585,7 @@
       
       <div style="text-align:center;margin-bottom:20px;">
         <div style="display:inline-block;background:#f5e6d0;color:#590B3F;padding:10px 18px;border-radius:8px;font-weight:700;font-size:14px;">
-          📋 Order for ${customerName || 'You'}
+          📋 Order for ${customerName || "You"}
         </div>
       </div>
       
@@ -1599,19 +1613,19 @@
       </div>
       
       <div style="text-align:center;margin-top:24px;">
-        ${squareLink ? `<a href="${squareLink}" target="_blank" style="display:inline-block;background:#AF3D4B;color:#fff;padding:16px 40px;border-radius:50px;font-weight:700;font-size:16px;text-decoration:none;transition:all 0.2s;">💳 Complete Payment</a>` : ''}
+        ${squareLink ? `<a href="${squareLink}" target="_blank" style="display:inline-block;background:#AF3D4B;color:#fff;padding:16px 40px;border-radius:50px;font-weight:700;font-size:16px;text-decoration:none;transition:all 0.2s;">💳 Complete Payment</a>` : ""}
         <p style="font-size:14px;color:#374151;margin-top:20px;line-height:1.6;font-weight:600;">
           We got you! Click the payment link above to make a secure payment. Once you have made your payment we will begin your order.
         </p>
         <p style="font-size:12px;color:#6B7280;margin-top:12px;line-height:1.5;">
           Payment links expire at 2:00 AM CT. Didn't receive the email? Check spam or call us.
         </p>
-        <p style="font-size:12px;color:#9CA3AF;">Questions? Call us at <a href="tel:${BRAND.phone.replace(/[^0-9]/g, '')}" style="color:#590B3F;text-decoration:none;font-weight:600;">${BRAND.phone}</a>.</p>
+        <p style="font-size:12px;color:#9CA3AF;">Questions? Call us at <a href="tel:${BRAND.phone.replace(/[^0-9]/g, "")}" style="color:#590B3F;text-decoration:none;font-weight:600;">${BRAND.phone}</a>.</p>
       </div>
     </div>
   `;
         // Insert before footer instead of appending to body
-        const footer = document.getElementById('pageFooter');
+        const footer = document.getElementById("pageFooter");
         if (footer) {
           document.body.insertBefore(confirmation, footer);
         } else {
