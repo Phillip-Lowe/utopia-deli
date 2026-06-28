@@ -14,9 +14,8 @@ window.MENU = {
       item_id: "COWBOY",
       name: "cowboy chikn sandwich",
       price: 1300,
-      desc: "Grilled Cowboy Chik’n, Lettuce, Tomato, Ranch, Bac'n.",
-      photo:
-        "https://cdn.shopify.com/s/files/1/0763/5042/3270/files/Utopia_Deli_Cowboy_Chik_n_Sandwich_menu.png?v=1774977205",
+      desc: "Grilled Cowboy Chik'n, Lettuce, Tomato, Ranch, Bac'n.",
+      photo: "../images/cowboy_chicken.webp",
       modifiers: {
         sauce: [
           {
@@ -226,9 +225,8 @@ window.MENU = {
       item_id: "CLUB",
       name: "chikn club sub",
       price: 1500,
-      desc: "Grilled Chik’n Bac’n Cheese on a bed of Lettuce and Tomatoes.",
-      photo:
-        "https://cdn.shopify.com/s/files/1/0763/5042/3270/files/Utopia_Deli_Chik_n_Club_Sub_menu.png?v=1774975565",
+      desc: "Grilled Chik'n Bac'n Cheese on a bed of Lettuce and Tomatoes.",
+      photo: "../images/chicken_club.webp",
       modifiers: {
         hold: [
           {
@@ -439,8 +437,7 @@ window.MENU = {
       name: "chikn fried chikn sub",
       price: 1300,
       desc: "Crispy Fried Chik'n on a hoagie with lettuce, tomato, ranch.",
-      photo:
-        "https://cdn.shopify.com/s/files/1/0763/5042/3270/files/Utopia_Deli_Chik_n_Fried_Chik_n_Sub_menu.png?v=1774978809",
+      photo: "../images/chicken_fried_chikn_sub.png",
       modifiers: {
         hold: [
           {
@@ -660,8 +657,8 @@ window.MENU = {
       item_id: "PHILLY",
       name: "philly sub",
       price: 1300,
-      desc: "“Stek” OR Chik’n with sautéed onions & bell peppers.",
-      photo: "",
+      desc: ""Stek" OR Chik'n with sautéed onions & bell peppers.",
+      photo: "../images/steak_philly.jpg",
       modifiers: {
         protein: [
           {
@@ -864,7 +861,7 @@ window.MENU = {
       name: "chikn poppers",
       price: 1000,
       desc: "Crispy chikn dippers or sauced with choice of BBQ, Garlic Parm, Jerk, Buffalo, Lemon Pepper Wet.",
-      photo: "",
+      photo: "../images/chicken_poppers_v3.jpg",
       modifiers: {
         sauce: [
           {
@@ -948,8 +945,8 @@ window.MENU = {
       item_id: "DUMPLING_TACOS",
       name: "korean pork dumpling tacos",
       price: 1000,
-      desc: "“Pork”, pickled slaw, aioli, and sauce on a dumpling shell. Set of 4 tacos.",
-      photo: "",
+      desc: ""Pork", pickled slaw, aioli, and sauce on a dumpling shell. Set of 4 tacos.",
+      photo: "../images/korean_pork_dumpling_tacos.jpg",
       modifiers: {
         hold: [
           {
@@ -1025,8 +1022,8 @@ window.MENU = {
       item_id: "ROCKTOWN_SLIDERS",
       name: "rocktown bourbon chikn sliders",
       price: 1200,
-      desc: "Rocktown distillery bourbon-infused chik’n with fresh slaw and aioli on a garlic butter slider bun.",
-      photo: "",
+      desc: "Rocktown distillery bourbon-infused chik'n with fresh slaw and aioli on a garlic butter slider bun.",
+      photo: "../images/rocktown_bourbon_slider.jpg",
       modifiers: {
         hold: [
           {
@@ -1138,7 +1135,7 @@ window.MENU = {
       name: "fries",
       price: 500,
       desc: "Crinkle-cut fries with a golden, crispy exterior. Choose plain or loaded style.",
-      photo: "",
+      photo: "../images/plain_fries.avif",
 
       variants: [
         {
@@ -1150,29 +1147,29 @@ window.MENU = {
         },
         {
           variant_id: "FRIES_BACN",
-          label: "loaded fries — bac'n",
-          variant_name: "loaded fries — bac'n",
+          label: "loaded fries - bac'n",
+          variant_name: "loaded fries - bac'n",
           price_delta_cents: 800,
           sell_price_cents: 1300,
         },
         {
           variant_id: "FRIES_CHIKN",
-          label: "loaded fries — philly chik'n",
-          variant_name: "loaded fries — philly chik'n",
+          label: "loaded fries - philly chik'n",
+          variant_name: "loaded fries - philly chik'n",
           price_delta_cents: 800,
           sell_price_cents: 1300,
         },
         {
           variant_id: "FRIES_GARLICPARM",
-          label: "loaded fries — garlic parm",
-          variant_name: "loaded fries — garlic parm",
+          label: "loaded fries - garlic parm",
+          variant_name: "loaded fries - garlic parm",
           price_delta_cents: 800,
           sell_price_cents: 1300,
         },
         {
           variant_id: "FRIES_STEK",
-          label: "loaded fries — philly stek",
-          variant_name: "loaded fries — philly stek",
+          label: "loaded fries - philly stek",
+          variant_name: "loaded fries - philly stek",
           price_delta_cents: 800,
           sell_price_cents: 1300,
         },
@@ -1232,7 +1229,7 @@ window.MENU = {
       name: "fresh cold-pressed juice",
       price: 500,
       desc: "Select flavor and size. Current public size is 10 oz plastic bottle.",
-      photo: "",
+      photo: "../images/cold_pressed_juice_v2.jpg",
 
       variants: [
         {
@@ -1251,8 +1248,8 @@ window.MENU = {
             mod_id: "JFLAV_GREEN",
             group_id: "JUICE_FLAVOR",
             group_type: "REQUIRED",
-            label: "green juice — green apple, cucumber, celery, ginger",
-            mod_name: "green juice — green apple, cucumber, celery, ginger",
+            label: "green juice - green apple, cucumber, celery, ginger",
+            mod_name: "green juice - green apple, cucumber, celery, ginger",
             price: 0,
             price_delta_cents: 0,
           },
@@ -1261,8 +1258,8 @@ window.MENU = {
             mod_id: "JFLAV_ORANGE",
             group_id: "JUICE_FLAVOR",
             group_type: "REQUIRED",
-            label: "orange machine — orange, carrot, ginger, apple",
-            mod_name: "orange machine — orange, carrot, ginger, apple",
+            label: "orange machine - orange, carrot, ginger, apple",
+            mod_name: "orange machine - orange, carrot, ginger, apple",
             price: 0,
             price_delta_cents: 0,
           },
@@ -1271,8 +1268,8 @@ window.MENU = {
             mod_id: "JFLAV_SWEET",
             group_id: "JUICE_FLAVOR",
             group_type: "REQUIRED",
-            label: "sweet dreams — strawberry, grapes, watermelon, lemons",
-            mod_name: "sweet dreams — strawberry, grapes, watermelon, lemons",
+            label: "sweet dreams - strawberry, grapes, watermelon, lemons",
+            mod_name: "sweet dreams - strawberry, grapes, watermelon, lemons",
             price: 0,
             price_delta_cents: 0,
           },
@@ -1286,7 +1283,7 @@ window.MENU = {
       name: "two fresh baked chocolate chip cookies",
       price: 400,
       desc: "2 fresh baked chocolate chip cookies.",
-      photo: "",
+      photo: "../images/cookies_v2.jpg",
       modifiers: {},
     },
 
@@ -1296,7 +1293,7 @@ window.MENU = {
       name: "side salad",
       price: 500,
       desc: "Fresh mixed greens with house vegetables, served with your choice of dressing.",
-      photo: "",
+      photo: "../images/side_salad_v2.png",
       modifiers: {},
     },
 
@@ -1305,8 +1302,8 @@ window.MENU = {
       item_id: "WATER_16OZ",
       name: "16 oz bottled water",
       price: 200,
-      desc: "Crisp, chilled 16 oz bottled water — refreshing and perfect alongside any meal.",
-      photo: "",
+      desc: "Crisp, chilled 16 oz bottled water - refreshing and perfect alongside any meal.",
+      photo: "../images/bottled_water_v2.png",
       modifiers: {},
     },
 
@@ -1315,8 +1312,8 @@ window.MENU = {
       item_id: "CHIPS_SPIRALS",
       name: "potato chip spirals",
       price: 500,
-      desc: "Crispy potato chip spirals — seasoned and fried to perfection.",
-      photo: "",
+      desc: "Crispy potato chip spirals - seasoned and fried to perfection.",
+      photo: "../images/spiral_chips.jpg",
       modifiers: {},
     },
   ],
