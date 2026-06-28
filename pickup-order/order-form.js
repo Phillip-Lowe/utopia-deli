@@ -881,7 +881,7 @@ async function submitOrder() {
         total_cents: total,
       },
       notes: specialInstructions || "",
-      pickup_time: pickupTime || "ASAP",
+      pickup_time: pickupTime || "25-30 mins",
     },
   };
 
