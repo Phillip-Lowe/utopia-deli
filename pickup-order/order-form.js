@@ -635,7 +635,7 @@ function updateCart() {
                           );
                           return `
                             <span class="cart-mod-tag">
-            modifier.mod_name)}
+                              ${escapeHtml(modifier.label || modifier.mod_name)}
                               ${price > 0 ? ` (+$${formatPrice(price)})` : ""}
                             </span>
                           `;
