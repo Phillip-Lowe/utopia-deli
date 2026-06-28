@@ -1263,16 +1263,6 @@
         const unitPrice = item.price + modPrice;
         const totalPrice = unitPrice * qty;
 
-        // DEBUG: Log what we're adding
-          item: item.name,
-          basePrice: item.price,
-          modifiers: mods.map(m => ({ label: m.label, price: m.price, group: m.group })),
-          modPrice,
-          unitPrice,
-          qty,
-          totalPrice
-        });
-
         cart.push({
           id: item.id,
           name: item.name,
@@ -1481,15 +1471,6 @@
               result.message ||
               `Server error (${response.status})`;
 
-            // Log error for debugging
-            console.error("Order submission failed:", {
-              code: errorCode,
-              status: response.status,
-              message: errorMessage,
-              payload: payload,
-              response: result,
-            });
-
             showAlert(
               "error",
               `Order failed: ${errorMessage}. Please try again or call ${BRAND.phone}.`,
@@ -1502,13 +1483,6 @@
             const errorCode = result.code || "BUSINESS_RULE_ERROR";
             const errorMessage =
               result.error || result.message || "Order could not be processed";
-
-            console.error("Business rule error:", {
-              code: errorCode,
-              message: errorMessage,
-              payload: payload,
-              response: result,
-            });
 
             showAlert(
               "error",
@@ -1524,14 +1498,8 @@
             result.square_link || result.payment_link || result.payment_url,
           );
 
-          // Log success for analytics
-            order_id: result.order_id || "unknown",
-            items: payload.items.length,
-            total_cents: payload.totals.total_cents,
-          });
         } catch (err) {
           // Network / CORS / unexpected error
-          console.error("Checkout error:", err);
 
           // Determine error type for better messaging
           let errorMessage = "Could not reach the ordering system.";
