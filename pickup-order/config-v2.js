@@ -7,7 +7,7 @@
 const BRAND = {
   // Identity
   name: "The Utopia Deli",
-  tagline: "It's just good food",
+  tagline: "It's just good food!",
   shortName: "Utopia Deli",
   location: "Little Rock, AR",
 

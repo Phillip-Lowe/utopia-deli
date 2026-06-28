@@ -1,14 +1,15 @@
-// ===================== ORACLE / SOL LOCKED: order-form.js v5.0
+// ===================== ORACLE / SOL LOCKED: order-form.js v5.1
 // Utopia Deli canonical frontend order form
-// Matches canonical menu-data.js contract:
 //
-// - item.id / item.item_id = DB item_id
-// - item.variants[].variant_id = DB variant_id
-// - modifier.mod_id = DB mod_id
-// - modifier.group_id = DB group_id
-// - prices are cents
-// - frontend displays totals only
-// - backend must recalculate prices from IDs
+// Contract:
+// - Frontend item id = DB item_id
+// - Variant id = DB variant_id
+// - Modifier code/mod_id = DB mod_id
+// - Modifier group_id = DB group_id
+// - Prices are cents
+// - Frontend displays totals only
+// - Backend recalculates from IDs
+// - Source = pickup-order
 // =====================
 
 // ===================== STATE =====================
@@ -36,7 +37,6 @@ const CHECKOUT_ENDPOINT =
   window.BRAND?.checkout?.endpoint ||
   "https://n8n.systack.net/webhook/utopia-deli-order-v4";
 
-// Canonical group rules from approved modifier_groups table.
 const GROUP_RULES = {
   COW_SAUCES: { min: 0, max: 6 },
   COW_TAKEOFF: { min: 0, max: 4 },
@@ -116,6 +116,7 @@ function getGroupRule(groupId, groupType) {
 
 function readableGroupName(groupKey, firstOption) {
   const groupId = firstOption?.group_id || groupKey;
+
   const names = {
     sauce: "Sauce",
     hold: "Take Off",
@@ -157,6 +158,7 @@ function renderCategory(gridId, items) {
               ? `<img class="item-photo" src="${escapeHtml(photo)}" alt="${name}" loading="lazy">`
               : ""
           }
+
           <div class="item-content">
             <div class="item-header">
               <div class="item-name">${name}</div>
@@ -194,7 +196,8 @@ function renderVariants(item) {
   return `
     <div class="mod-group variant-group" data-group="variants">
       <div class="mod-group-title">
-        Choose Option <span style="color:var(--ud-accent);font-size:10px;">● REQUIRED</span>
+        Choose Option
+        <span style="color:var(--ud-accent);font-size:10px;">● REQUIRED</span>
       </div>
 
       <div class="mod-options">
@@ -209,7 +212,9 @@ function renderVariants(item) {
                 type="button"
                 class="mod-btn variant-btn"
                 data-variant-id="${variantId}"
-                onclick="event.stopPropagation(); toggleVariant('${item.id}', '${variantId}', this)"
+                onclick="event.stopPropagation(); toggleVariant('${escapeHtml(
+                  item.id || item.item_id,
+                )}', '${variantId}', this)"
               >
                 ${label}
                 ${
@@ -237,12 +242,12 @@ function renderModifiers(item) {
       const groupId = first.group_id || groupKey;
       const rule = getGroupRule(groupId, first.group_type);
       const isRequired = rule.min > 0;
-      const groupTitle = escapeHtml(readableGroupName(groupKey, first));
+      const title = escapeHtml(readableGroupName(groupKey, first));
 
       return `
         <div class="mod-group" data-group="${escapeHtml(groupKey)}" data-group-id="${escapeHtml(groupId)}">
           <div class="mod-group-title">
-            ${groupTitle}
+            ${title}
             ${
               isRequired
                 ? `<span style="color:var(--ud-accent);font-size:10px;">● REQUIRED</span>`
@@ -307,9 +312,6 @@ function selectItem(id) {
   document.querySelectorAll(".qty-control input").forEach((input) => {
     input.value = 1;
   });
-
-  // Do not auto-select modifiers.
-  // Customer must explicitly choose required options.
 }
 
 function toggleVariant(itemId, variantId, btn) {
@@ -351,16 +353,14 @@ function toggleMod(groupKey, modId, btn) {
     (selected) => (selected.mod_id || selected.code) === modId,
   );
 
-  // Toggle off if already selected.
   if (existingIndex >= 0) {
     selectedList.splice(existingIndex, 1);
     btn.classList.remove("active");
-    updateModifierCounter(groupKey, groupId, rule);
+    updateModifierCounter(groupKey, rule);
     updateModifierDisabledState(groupKey, rule);
     return;
   }
 
-  // If max 1, replace current selection.
   if (rule.max === 1) {
     selectedList.length = 0;
 
@@ -370,7 +370,6 @@ function toggleMod(groupKey, modId, btn) {
     });
   }
 
-  // If max > 1, block over-selection.
   if (rule.max > 1 && selectedList.length >= rule.max) {
     showAlert(
       "error",
@@ -382,11 +381,11 @@ function toggleMod(groupKey, modId, btn) {
   selectedList.push({ ...option, group: groupKey });
   btn.classList.add("active");
 
-  updateModifierCounter(groupKey, groupId, rule);
+  updateModifierCounter(groupKey, rule);
   updateModifierDisabledState(groupKey, rule);
 }
 
-function updateModifierCounter(groupKey, groupId, rule) {
+function updateModifierCounter(groupKey, rule) {
   if (!selectedItem) return;
 
   const selectedCount = selectedModifiers[groupKey]?.length || 0;
@@ -636,7 +635,7 @@ function updateCart() {
                           );
                           return `
                             <span class="cart-mod-tag">
-                              ${escapeHtml(modifier.label || modifier.mod_name)}
+            modifier.mod_name)}
                               ${price > 0 ? ` (+$${formatPrice(price)})` : ""}
                             </span>
                           `;
@@ -680,7 +679,8 @@ function updateCart() {
 
     <div class="cart-totals">
       <div class="total-row">
-        <span>otal)}</span>
+        <span>Subtotal</span>
+        <span>$${formatPrice(subtotal)}</span>
       </div>
       <div class="total-row tax">
         <span>Tax (est. 9.52%)</span>
@@ -706,7 +706,7 @@ function scrollToCart() {
     ?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
-// ===================== HOURS VALIDATION =====================
+// ===================== HOURS =====================
 function isDeliOpen(pickupTime) {
   if (!pickupTime || pickupTime === "ASAP") {
     return { open: true, message: "ASAP selected." };
@@ -731,11 +731,11 @@ function isDeliOpen(pickupTime) {
   const [closeHour, closeMin] = hours.close.split(":").map(Number);
   const closeMinutes = closeHour * 60 + closeMin;
 
-  const isOpen = pickupMinutes >= openMinutes && pickupMinutes <= closeMinutes;
+  const open = pickupMinutes >= openMinutes && pickupMinutes <= closeMinutes;
 
   return {
-    open: isOpen,
-    message: isOpen
+    open,
+    message: open
       ? "Deli is open."
       : `Deli is closed at ${pickupTime}. Hours: ${hours.open} - ${hours.close}`,
   };
@@ -854,8 +854,13 @@ async function submitOrder() {
     btn.innerHTML = '<span class="spinner"></span> Sending...';
   }
 
+  const subtotal = cart.reduce((sum, item) => sum + item.totalPrice, 0);
+  const tax = Math.round(subtotal * TAX_RATE);
+  const total = subtotal + tax;
+
   const payload = {
     body: {
+      source: "pickup-order",
       customer: {
         name: customerName,
         email,
@@ -870,9 +875,13 @@ async function submitOrder() {
           mod_id: modifier.mod_id,
         })),
       })),
+      totals: {
+        subtotal_cents: subtotal,
+        tax_cents: tax,
+        total_cents: total,
+      },
       notes: specialInstructions || "",
-      pickup_time: pickupTime || "25-30 mins",
-      source: "pickup-order",
+      pickup_time: pickupTime || "ASAP",
     },
   };
 
@@ -911,7 +920,7 @@ async function submitOrder() {
 
     showConfirmation(
       result.message ||
-        "Click the payment link below to complete your order. We'll begin preparing your food once payment is completed.",
+        "Click the payment link below to complete your order. We'll start preparing your food once payment is completed.",
       result.payment_link || result.square_link || result.payment_url,
     );
   } catch (err) {
@@ -1002,6 +1011,7 @@ function showConfirmation(message, paymentLink) {
         <div style="font-size:56px;margin-bottom:12px;">🎉</div>
         <h2 style="font-size:28px;font-weight:800;margin:0 0 8px 0;">We Got You!</h2>
         <p style="font-size:16px;opacity:0.9;margin:0;">We've received your order.</p>
+      </div>
 
       <h3 style="font-size:16px;font-weight:700;color:#590B3F;margin:20px 0 12px 0;">Your Order</h3>
       ${orderItemsHtml}
@@ -1022,16 +1032,15 @@ function showConfirmation(message, paymentLink) {
       </div>
 
       <div style="text-align:center;margin-top:24px;">
-        
-        <p style="font-size:14px;color:#374151;margin-top:20px;line-height:1.6;font-weight:600;">
-          ${escapeHtml(message)}
-        </p>
-      
         ${
           paymentLink
             ? `" target="_blank" style="display:inline-block;background:#AF3D4B;color:#fff;padding:16px 40px;border-radius:50px;font-weight:700;font-size:16px;text-decoration:none;">💳 Complete Payment</a>`
             : ""
         }
+
+        <p style="font-size:14px;color:#374151;margin-top:20px;line-height:1.6;font-weight:600;">
+          ${escapeHtml(message)}
+        </p>
 
         <p style="font-size:12px;color:#6B7280;margin-top:12px;line-height:1.5;">
           Payment links expire at 2:00 AM CT. Didn't receive the email? Check spam or call us.
