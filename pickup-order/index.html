@@ -18,7 +18,7 @@
       rel="stylesheet"
     />
     <script src="config-v2.js"></script>
-    <script src="menu-data.js?v=8"></script>
+    <script src="menu-data.js?v=9"></script>
     <style>
       :root {
         --ud-primary: #590b3f;
@@ -954,7 +954,7 @@
       </p>
     </footer>
 
-    <script src="menu-data.js?v=8"></script>
+    <script src="menu-data.js?v=9"></script>
     <script>
       // ===================== STATE =====================
       let cart = [];
@@ -1421,12 +1421,18 @@
             // ✅ RAW base price ONLY (no modifier math)
             base_price_cents: findItem(cartItem.id).price,
 
-            // ✅ Send modifiers untouched
+            // ✅ Send modifiers with CANONICAL DB fields (fallback to old fields)
             modifiers: cartItem.modifiers.map((m) => ({
-              code: m.code,
-              label: m.label,
-              price_cents: m.price || 0,
-              group: m.group || null
+              mod_id: m.mod_id || m.code,
+              group_id: m.group_id || m.group,
+              group_type: m.group_type || null,
+              mod_name: m.mod_name || m.label,
+              price_delta_cents: m.price_delta_cents || m.price || 0,
+              // Temporary fallbacks for backward compatibility
+              code: m.code || m.mod_id,
+              label: m.label || m.mod_name,
+              price_cents: m.price || m.price_delta_cents || 0,
+              group: m.group || m.group_id
             })),
           };
         });

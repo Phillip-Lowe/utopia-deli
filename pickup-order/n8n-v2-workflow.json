@@ -1,0 +1,272 @@
+{
+  "name": "Utopia Deli V2 — DB-Validated Order",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "utopia-order-v2",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-v2",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "hours-1",
+              "leftValue": "={{ (function() {\n  if ($json.body.test === true) return true;\n  var pickup = $json.body.pickup_time || 'ASAP';\n  var now = new Date();\n  var day = now.getDay();\n  var hour = now.getHours();\n  var min = now.getMinutes();\n  var isWeekday = day >= 1 && day <= 6;\n  if (!isWeekday) return false;\n  var openMin = 12 * 60 + 30;\n  var closeMin = 19 * 60 + 30;\n  if (pickup === 'ASAP') {\n    var currentMin = hour * 60 + min;\n    var asapMin = currentMin + 30;\n    return asapMin >= openMin && asapMin <= closeMin;\n  } else {\n    var parts = pickup.split(':');\n    var pHour = parseInt(parts[0]);\n    var pMin = parseInt(parts[1]);\n    var pickupMin = pHour * 60 + pMin;\n    return pickupMin >= openMin && pickupMin <= closeMin;\n  }\n})() }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "true" }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "check-hours-v2",
+      "name": "Check Hours",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $json.body || $json;\n\n// Extract all lookup IDs from payload\nconst items = body.items || [];\nconst itemIds = [...new Set(items.map(i => i.item_id || i.id).filter(Boolean))];\n\nconst modIds = [];\nconst groupIds = [];\n\nitems.forEach(item => {\n  (item.modifiers || []).forEach(mod => {\n    if (mod.mod_id || mod.code) modIds.push(mod.mod_id || mod.code);\n    if (mod.group_id || mod.group) groupIds.push(mod.group_id || mod.group);\n  });\n});\n\nreturn {\n  json: {\n    body,\n    lookup_item_ids: itemIds,\n    lookup_mod_ids: [...new Set(modIds)],\n    lookup_group_ids: [...new Set(groupIds)]\n  }\n};"
+      },
+      "id": "extract-ids-v2",
+      "name": "Extract Lookup IDs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT item_id, name, base_price_cents, sell_price_cents, active FROM menu_items WHERE item_id = ANY($1);",
+        "options": {
+          "queryParams": [
+            "={{ $json.lookup_item_ids }}"
+          ]
+        }
+      },
+      "id": "db-items-v2",
+      "name": "DB: Lookup Items",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [850, 200],
+      "credentials": {
+        "postgres": {
+          "id": "postgres-utopia",
+          "name": "Utopia Deli Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT mod_id, group_id, mod_name, price_delta_cents, active FROM modifiers WHERE mod_id = ANY($1);",
+        "options": {
+          "queryParams": [
+            "={{ $json.lookup_mod_ids }}"
+          ]
+        }
+      },
+      "id": "db-mods-v2",
+      "name": "DB: Lookup Modifiers",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [850, 300],
+      "credentials": {
+        "postgres": {
+          "id": "postgres-utopia",
+          "name": "Utopia Deli Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT group_id, item_id, min_select, max_select, group_type, group_label FROM modifier_groups WHERE group_id = ANY($1);",
+        "options": {
+          "queryParams": [
+            "={{ $json.lookup_group_ids }}"
+          ]
+        }
+      },
+      "id": "db-groups-v2",
+      "name": "DB: Lookup Groups",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [850, 400],
+      "credentials": {
+        "postgres": {
+          "id": "postgres-utopia",
+          "name": "Utopia Deli Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const extractData = $('Extract Lookup IDs').first().json;\nconst body = extractData.body;\nconst items = body.items || [];\n\n// DB lookup results\nconst dbItems = {};\n($('DB: Lookup Items').all()[0]?.json || []).forEach(row => {\n  dbItems[row.item_id] = row;\n});\n\nconst dbMods = {};\n($('DB: Lookup Modifiers').all()[0]?.json || []).forEach(row => {\n  dbMods[row.mod_id] = row;\n});\n\nconst dbGroups = {};\n($('DB: Lookup Groups').all()[0]?.json || []).forEach(row => {\n  if (!dbGroups[row.item_id]) dbGroups[row.item_id] = {};\n  dbGroups[row.item_id][row.group_id] = row;\n});\n\nconst errors = [];\nconst validatedItems = [];\nlet subtotalCents = 0;\nconst comboSides = [];\n\nitems.forEach((item, idx) => {\n  const itemId = item.item_id || item.id;\n  const qty = Math.max(1, parseInt(item.qty) || 1);\n  \n  // Validate item\n  const dbItem = dbItems[itemId];\n  if (!dbItem) {\n    errors.push(`Item ${itemId} not found`);\n    return;\n  }\n  if (!dbItem.active) {\n    errors.push(`Item ${itemId} is inactive`);\n    return;\n  }\n  \n  const basePrice = dbItem.base_price_cents;\n  let modifiersTotal = 0;\n  const validatedModifiers = [];\n  const groupCounts = {};\n  \n  // Process modifiers\n  (item.modifiers || []).forEach(mod => {\n    const modId = mod.mod_id || mod.code;\n    const groupId = mod.group_id || mod.group;\n    const dbMod = dbMods[modId];\n    \n    if (!dbMod) {\n      errors.push(`Modifier ${modId} not found`);\n      return;\n    }\n    if (!dbMod.active) {\n      errors.push(`Modifier ${modId} is inactive`);\n      return;\n    }\n    if (dbMod.group_id !== groupId) {\n      errors.push(`Modifier ${modId} group mismatch: expected ${dbMod.group_id}, got ${groupId}`);\n      return;\n    }\n    \n    // Check group ownership\n    const itemGroups = dbGroups[itemId] || {};\n    if (!itemGroups[groupId]) {\n      errors.push(`Group ${groupId} not valid for item ${itemId}`);\n      return;\n    }\n    \n    // Count per group\n    groupCounts[groupId] = (groupCounts[groupId] || 0) + 1;\n    \n    // Handle combo separately\n    if (modId.endsWith('_COMBO_FRIES') || modId.endsWith('_COMBO_SALAD')) {\n      const sideName = modId.endsWith('_COMBO_FRIES') ? 'Combo plain fries' : 'Combo side salad';\n      comboSides.push({\n        name: sideName,\n        quantity: qty,\n        amount_cents: dbMod.price_delta_cents,\n        parent_item_id: itemId,\n        source_mod_id: modId\n      });\n      validatedModifiers.push({\n        mod_id: modId,\n        group_id: groupId,\n        mod_name: dbMod.mod_name,\n        price_delta_cents: 0,  // Display only\n        is_combo: true\n      });\n    } else {\n      modifiersTotal += dbMod.price_delta_cents;\n      validatedModifiers.push({\n        mod_id: modId,\n        group_id: groupId,\n        mod_name: dbMod.mod_name,\n        price_delta_cents: dbMod.price_delta_cents\n      });\n    }\n  });\n  \n  // Check group min/max\n  const itemGroups = dbGroups[itemId] || {};\n  Object.values(itemGroups).forEach(group => {\n    const count = groupCounts[group.group_id] || 0;\n    if (group.min_select > 0 && count < group.min_select) {\n      errors.push(`${item.name} requires ${group.min_select} selection(s) for ${group.group_label}`);\n    }\n    if (count > group.max_select) {\n      errors.push(`${item.name} exceeds max ${group.max_select} for ${group.group_label}`);\n    }\n  });\n  \n  const unitTotal = basePrice + modifiersTotal;\n  const itemTotal = unitTotal * qty;\n  subtotalCents += itemTotal;\n  \n  validatedItems.push({\n    item_id: itemId,\n    name: dbItem.name,\n    quantity: qty,\n    base_price_cents: basePrice,\n    modifiers: validatedModifiers,\n    unit_total_cents: unitTotal,\n    line_total_cents: itemTotal\n  });\n});\n\n// Calculate tax\nconst TAX_RATE = 0.0952;\nconst taxCents = Math.round(subtotalCents * TAX_RATE);\nconst finalTotal = subtotalCents + taxCents;\n\n// Check frontend mismatch (diagnostic only)\nconst frontendTotal = body.frontend_total_cents || body.subtotal_cents || 0;\nconst mismatch = frontendTotal > 0 && Math.abs(frontendTotal - subtotalCents) > 1;\n\n// Build Square line items\nconst squareLineItems = validatedItems.map(item => ({\n  name: item.name,\n  quantity: String(item.quantity),\n  base_price_money: {\n    amount: item.unit_total_cents,\n    currency: 'USD'\n  },\n  modifiers: item.modifiers\n    .filter(m => !m.is_combo)\n    .map(m => ({\n      name: m.mod_name,\n      base_price_money: { amount: 0, currency: 'USD' }\n    }))\n}));\n\n// Add combo sides as separate line items\ncomboSides.forEach(side => {\n  squareLineItems.push({\n    name: side.name,\n    quantity: String(side.quantity),\n    base_price_money: {\n      amount: side.amount_cents,\n      currency: 'USD'\n    }\n  });\n});\n\n// Add tax as line item\nsquareLineItems.push({\n  name: 'Sales Tax (9.52%)',\n  quantity: '1',\n  base_price_money: {\n    amount: taxCents,\n    currency: 'USD'\n  }\n});\n\n// Order ID\nconst orderId = 'UTO-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5).toUpperCase();\n\nreturn {\n  json: {\n    ok: errors.length === 0,\n    errors,\n    customer: body.customer || {},\n    items: validatedItems,\n    combo_sides: comboSides,\n    square_line_items: squareLineItems,\n    subtotal_cents: subtotalCents,\n    tax_cents: taxCents,\n    total_cents: finalTotal,\n    frontend_mismatch: mismatch,\n    frontend_subtotal: frontendTotal,\n    order_id: orderId,\n    cart_id: orderId,\n    pickup_time: body.pickup_time || 'ASAP',\n    notes: body.notes || ''\n  }\n};"
+      },
+      "id": "validate-calc-v2",
+      "name": "Validate \u0026 Calculate",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1050, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const validated = $('Validate \u0026 Calculate').first().json;\n\nif (!validated.ok) {\n  return {\n    json: {\n      status: 400,\n      error: 'Validation failed',\n      details: validated.errors\n    }\n  };\n}\n\nreturn validated;"
+      },
+      "id": "check-errors-v2",
+      "name": "Check Errors",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1250, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://connect.squareup.com/v2/online-checkout/payment-links",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Square-Version", "value": "2026-05-20" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  idempotency_key: $json.cart_id,\n  order: {\n    location_id: 'J4B6A3X6RYA63',\n    reference_id: String($json.order_id),\n    line_items: $json.square_line_items,\n    metadata: {\n      subtotal_cents: String($json.subtotal_cents),\n      tax_cents: String($json.tax_cents),\n      total_cents: String($json.total_cents)\n    }\n  },\n  checkout_options: {\n    redirect_url: 'https://www.theutopiadeli.com/payment-confirmed?order_id=' + encodeURIComponent(String($json.order_id)) + '&source=pickup-order'\n  }\n}) }}",
+        "options": { "timeout": 30000 }
+      },
+      "id": "square-v2",
+      "name": "Create Square Payment Link",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1450, 300],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "52UxQeWEulCNtFuR",
+          "name": "Deli Square Bearer Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const validated = $('Validate \u0026 Calculate').first().json;\nconst squareResponse = $input.first().json;\n\nreturn {\n  json: {\n    ...validated,\n    payment_link: squareResponse,\n    square_order_id: squareResponse.order_id\n  }\n};"
+      },
+      "id": "merge-response-v2",
+      "name": "Merge Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1650, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const merged = $('Merge Response').first().json;\nconst paymentLink = merged.payment_link || {};\nconst linkUrl = paymentLink.url || paymentLink.long_url || '';\n\nreturn {\n  json: {\n    ok: true,\n    message: 'Order received! Check your email for payment link.',\n    square_link: linkUrl,\n    order_id: merged.order_id,\n    total_cents: merged.total_cents,\n    subtotal_cents: merged.subtotal_cents,\n    tax_cents: merged.tax_cents,\n    frontend_mismatch: merged.frontend_mismatch || false\n  }\n};"
+      },
+      "id": "format-response-v2",
+      "name": "Format Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1850, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const merged = $('Merge Response').first().json;\nconst dbPath = '/Users/philliplowe/.openclaw/workspaces/sol/utopia-deli-revamp/orders.db';\nconst sqlite3 = require('sqlite3').verbose();\n\nreturn new Promise((resolve) => {\n  const db = new sqlite3.Database(dbPath, (err) => {\n    if (err) {\n      resolve([{ json: { db_saved: false, db_error: err.message } }]);\n      return;\n    }\n    \n    const paymentLink = merged.payment_link || {};\n    const linkUrl = paymentLink.url || paymentLink.long_url || '';\n    const customer = merged.customer || {};\n    \n    db.run(\n      `INSERT INTO orders (\n        order_id, customer_name, customer_email, customer_phone,\n        customer_city, customer_county, cart_json,\n        subtotal_cents, tax_cents, total_cents,\n        square_payment_link, square_order_id,\n        notes, status, source, email_sent\n      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,\n      [\n        merged.order_id,\n        customer.name || '',\n        customer.email || '',\n        customer.phone || '',\n        customer.city || 'Little Rock',\n        customer.county || '',\n        JSON.stringify(merged.items),\n        merged.subtotal_cents,\n        merged.tax_cents,\n        merged.total_cents,\n        linkUrl,\n        merged.square_order_id || '',\n        merged.notes || '',\n        'pending',\n        'pickup-order',\n        0\n      ],\n      function(err) {\n        if (err) {\n          resolve([{ json: { db_saved: false, db_error: err.message } }]);\n        } else {\n          resolve([{ json: { db_saved: true, db_rowid: this.lastID } }]);\n        }\n        db.close();\n      }\n    );\n  });\n});"
+      },
+      "id": "save-db-v2",
+      "name": "Save to SQLite",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1850, 450]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "id": "respond-v2",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [2050, 300]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [[{ "node": "Check Hours", "type": "main", "index": 0 }]]
+    },
+    "Check Hours": {
+      "main": [
+        [{ "node": "Extract Lookup IDs", "type": "main", "index": 0 }],
+        []
+      ]
+    },
+    "Extract Lookup IDs": {
+      "main": [
+        [
+          { "node": "DB: Lookup Items", "type": "main", "index": 0 },
+          { "node": "DB: Lookup Modifiers", "type": "main", "index": 0 },
+          { "node": "DB: Lookup Groups", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "DB: Lookup Items": {
+      "main": [[{ "node": "Validate \u0026 Calculate", "type": "main", "index": 0 }]]
+    },
+    "DB: Lookup Modifiers": {
+      "main": [[{ "node": "Validate \u0026 Calculate", "type": "main", "index": 0 }]]
+    },
+    "DB: Lookup Groups": {
+      "main": [[{ "node": "Validate \u0026 Calculate", "type": "main", "index": 0 }]]
+    },
+    "Validate \u0026 Calculate": {
+      "main": [[{ "node": "Check Errors", "type": "main", "index": 0 }]]
+    },
+    "Check Errors": {
+      "main": [
+        [{ "node": "Create Square Payment Link", "type": "main", "index": 0 }],
+        [{ "node": "Format Response", "type": "main", "index": 0 }]
+      ]
+    },
+    "Create Square Payment Link": {
+      "main": [[{ "node": "Merge Response", "type": "main", "index": 0 }]]
+    },
+    "Merge Response": {
+      "main": [
+        [
+          { "node": "Format Response", "type": "main", "index": 0 },
+          { "node": "Save to SQLite", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Format Response": {
+      "main": [[{ "node": "Respond to Webhook", "type": "main", "index": 0 }]]
+    },
+    "Save to SQLite": {
+      "main": [[]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": []
+}

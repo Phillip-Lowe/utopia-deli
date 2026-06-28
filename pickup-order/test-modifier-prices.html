@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Modifier Price Test</title>
+  <script src="menu-data.js?v=8"></script>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    .item { border: 1px solid #ccc; padding: 15px; margin: 10px 0; border-radius: 8px; }
+    .mod-group { margin: 10px 0; }
+    .mod-btn { padding: 8px 12px; margin: 5px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; }
+    .mod-price { color: #D59F5C; font-weight: bold; margin-left: 5px; }
+    .selected { background: #e8f5e9; border-color: #4caf50; }
+  </style>
+</head>
+<body>
+  <h1>Modifier Price Display Test</h1>
+  <div id="output"></div>
+  
+  <script>
+    function formatPrice(cents) {
+      return (cents / 100).toFixed(2);
+    }
+    
+    function renderModifiers(item) {
+      if (!item.modifiers) return "<p>No modifiers</p>";
+      
+      let html = '';
+      for (const [group, options] of Object.entries(item.modifiers)) {
+        html += `<div class="mod-group">
+          <strong>${group.charAt(0).toUpperCase() + group.slice(1)}:</strong><br>`;
+        
+        for (const opt of options) {
+          const priceDisplay = opt.price > 0 ? `<span class="mod-price">+$${formatPrice(opt.price)}</span>` : "";
+          html += `<button class="mod-btn">${opt.label}${priceDisplay}</button>`;
+        }
+        
+        html += '</div>';
+      }
+      return html;
+    }
+    
+    // Test with first sandwich
+    const item = MENU.sandwiches[0]; // Cowboy Chicken
+    const output = document.getElementById('output');
+    
+    output.innerHTML = `
+      <div class="item">
+        <h2>${item.name}</h2>
+        <p>Base Price: $${formatPrice(item.price)}</p>
+        <h3>Modifiers:</h3>
+        ${renderModifiers(item)}
+      </div>
+      <div class="item">
+        <h2>Raw Data Check:</h2>
+        <pre>${JSON.stringify(item.modifiers, null, 2)}</pre>
+      </div>
+    `;
+  </script>
+</body>
+</html>

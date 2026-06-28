@@ -1,142 +1,478 @@
-// ===================== CODY-CREATED: order-form.js v4.0 — Webhook Integration
-// PLAN_ID: PLAN-HTML-WEBHOOK-INTEGRATION-2026-06-01
-// ROLE: CODY
-// STATE: ACTIVE
-// Date: 2026-06-07
-// Changes: Fixed payload schema to match WEBHOOK-DOCS.md v1.0.2:
-//          - Flat field names (customer_name, not customer.name)
-//          - order_items with price in dollars (not cents)
-//          - subtotal/tax/total in dollars (not cents)
-//          - pickup_time as "HH:MM" or "ASAP" string
-//          - Fixed undefined finalPickupTime bug
-//          - Proper response handling for JSON vs non-JSON
-//          - Added item_id mapping from menu-data.js
+// ===================== ORACLE / SOL LOCKED: order-form.js v5.0
+// Utopia Deli canonical frontend order form
+// Matches canonical menu-data.js contract:
+//
+// - item.id / item.item_id = DB item_id
+// - item.variants[].variant_id = DB variant_id
+// - modifier.mod_id = DB mod_id
+// - modifier.group_id = DB group_id
+// - prices are cents
+// - frontend displays totals only
+// - backend must recalculate prices from IDs
 // =====================
 
 // ===================== STATE =====================
 let cart = [];
 let selectedItem = null;
+let selectedVariant = null;
 let selectedModifiers = {};
 let itemQty = 1;
 
-// ===================== HOURS CONFIG =====================
+// ===================== CONFIG =====================
 const HOURS = {
-  timezone: 'America/Chicago',
-  mon: { open: '12:30', close: '19:30' },
-  tue: { open: '12:30', close: '19:30' },
-  wed: { open: '12:30', close: '19:30' },
-  thu: { open: '12:30', close: '19:30' },
-  fri: { open: '12:30', close: '19:30' },
-  sat: { open: '12:30', close: '19:30' },
-  sun: null // Closed Sunday
+  timezone: "America/Chicago",
+  mon: { open: "12:30", close: "19:30" },
+  tue: { open: "12:30", close: "19:30" },
+  wed: { open: "12:30", close: "19:30" },
+  thu: { open: "12:30", close: "19:30" },
+  fri: { open: "12:30", close: "19:30" },
+  sat: { open: "12:30", close: "19:30" },
+  sun: null,
 };
 
-const TAX_RATE = 0.0952; // Arkansas rate per webhook docs
+const TAX_RATE = 0.0952;
+
+const CHECKOUT_ENDPOINT =
+  window.BRAND?.checkout?.endpoint ||
+  "https://n8n.systack.net/webhook/utopia-deli-order-v4";
+
+// Canonical group rules from approved modifier_groups table.
+const GROUP_RULES = {
+  COW_SAUCES: { min: 0, max: 6 },
+  COW_TAKEOFF: { min: 0, max: 4 },
+  COW_NORANCH: { min: 0, max: 1 },
+  COW_ADDONS: { min: 0, max: 1 },
+  COW_COMBO: { min: 0, max: 1 },
+
+  PHILLY_PROTEIN: { min: 1, max: 1 },
+  PHILLY_ADDONS: { min: 0, max: 1 },
+  PHILLY_COMBO: { min: 0, max: 1 },
+  PHILLY_TAKEOFF: { min: 0, max: 6 },
+  PHILLY_EXTRAS: { min: 0, max: 3 },
+
+  CLUB_TAKEOFF: { min: 0, max: 4 },
+  CLUB_NORANCH: { min: 0, max: 1 },
+  CLUB_COMBO: { min: 0, max: 1 },
+  CLUB_ADDONS: { min: 0, max: 1 },
+  CLUB_SAUCES: { min: 0, max: 1 },
+
+  FRIED_TAKEOFF: { min: 0, max: 4 },
+  FRIED_NORANCH: { min: 0, max: 1 },
+  FRIED_COMBO: { min: 0, max: 1 },
+  FRIED_ADDONS: { min: 0, max: 1 },
+  FRIED_ADDSAUCE: { min: 0, max: 1 },
+
+  FRIES_ADDONS: { min: 0, max: 1 },
+  FRIES_ADDPROTEIN: { min: 0, max: 3 },
+
+  JUICE_FLAVOR: { min: 1, max: 1 },
+
+  POP_SAUCE: { min: 0, max: 1 },
+  POP_COMBO: { min: 0, max: 1 },
+
+  DUMPLING_TAKEOFF: { min: 0, max: 4 },
+  DUMPLING_SUBS: { min: 0, max: 1 },
+  DUMPLING_COMBO: { min: 0, max: 1 },
+
+  ROCK_TAKEOFF: { min: 0, max: 2 },
+  ROCK_COMBO: { min: 0, max: 1 },
+
+  BUFFALO_TAKEOFF: { min: 0, max: 2 },
+  BUFFALO_COMBO: { min: 0, max: 1 },
+};
+
+// ===================== HELPERS =====================
+function formatPrice(cents) {
+  return ((Number(cents) || 0) / 100).toFixed(2);
+}
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function getAllItems() {
+  return [
+    ...(window.MENU?.sandwiches || []),
+    ...(window.MENU?.specialties || []),
+    ...(window.MENU?.sides || []),
+    ...(window.MENU?.beverages || []),
+  ];
+}
+
+function findItem(id) {
+  return getAllItems().find((item) => item.id === id || item.item_id === id);
+}
+
+function getGroupRule(groupId, groupType) {
+  if (GROUP_RULES[groupId]) return GROUP_RULES[groupId];
+  if (groupType === "REQUIRED") return { min: 1, max: 1 };
+  return { min: 0, max: 99 };
+}
+
+function readableGroupName(groupKey, firstOption) {
+  const groupId = firstOption?.group_id || groupKey;
+  const names = {
+    sauce: "Sauce",
+    hold: "Take Off",
+    noranch: "No Ranch / Sauce Substitute",
+    addons: "Add Ons",
+    combo: "Combo Upgrade",
+    protein: "Protein",
+    extras: "Extras",
+    subs: "Substitutions",
+    flavor: "Juice Flavor",
+  };
+
+  return names[groupKey] || groupId.replaceAll("_", " ");
+}
 
 // ===================== RENDER MENU =====================
 function renderMenu() {
-  renderCategory('sandwichGrid', MENU.sandwiches);
-  renderCategory('specialtyGrid', MENU.specialties);
-  renderCategory('sidesGrid', MENU.sides);
+  renderCategory("sandwichGrid", window.MENU?.sandwiches || []);
+  renderCategory("specialtyGrid", window.MENU?.specialties || []);
+  renderCategory("sidesGrid", window.MENU?.sides || []);
+  renderCategory("beverageGrid", window.MENU?.beverages || []);
 }
 
 function renderCategory(gridId, items) {
   const grid = document.getElementById(gridId);
   if (!grid) return;
-  grid.innerHTML = items.map(item => `
-    <div class="menu-item" id="item-${item.id}" onclick="selectItem('${item.id}')">
-      ${item.photo ? `<img class="item-photo" src="${item.photo}" alt="${item.name}" loading="lazy">` : ''}
-      <div class="item-content">
-        <div class="item-header">
-          <div class="item-name">${item.name}</div>
-          <div class="item-price">$${formatPrice(item.price)}</div>
-        </div>
-        <div class="item-desc">${item.desc}</div>
-        <div class="modifiers" id="mods-${item.id}">
-          ${renderModifiers(item)}
-        </div>
-        <div class="item-actions">
-          <div class="qty-control">
-            <button type="button" onclick="event.stopPropagation(); changeQty(-1)">−</button>
-            <input type="number" id="qty-${item.id}" value="1" min="1" max="10" readonly>
-            <button type="button" onclick="event.stopPropagation(); changeQty(1)">+</button>
+
+  grid.innerHTML = items
+    .map((item) => {
+      const itemId = escapeHtml(item.id || item.item_id);
+      const name = escapeHtml(item.name);
+      const desc = escapeHtml(item.desc || "");
+      const photo = item.photo || "";
+
+      return `
+        <div class="menu-item" id="item-${itemId}" onclick="selectItem('${itemId}')">
+          ${
+            photo
+              ? `<img class="item-photo" src="${escapeHtml(photo)}" alt="${name}" loading="lazy">`
+              : ""
+          }
+          <div class="item-content">
+            <div class="item-header">
+              <div class="item-name">${name}</div>
+              <div class="item-price">$${formatPrice(item.price)}</div>
+            </div>
+
+            <div class="item-desc">${desc}</div>
+
+            <div class="modifiers" id="mods-${itemId}">
+              ${renderVariants(item)}
+              ${renderModifiers(item)}
+            </div>
+
+            <div class="item-actions">
+              <div class="qty-control">
+                <button type="button" onclick="event.stopPropagation(); changeQty(-1)">−</button>
+                <input type="number" id="qty-${itemId}" value="1" min="1" max="10" readonly>
+                <button type="button" onclick="event.stopPropagation(); changeQty(1)">+</button>
+              </div>
+
+              <button class="add-btn" onclick="event.stopPropagation(); addToCart('${itemId}')">
+                ➕ Add to Order
+              </button>
+            </div>
           </div>
-          <button class="add-btn" onclick="event.stopPropagation(); addToCart('${item.id}')">
-            ➕ Add to Order
-          </button>
         </div>
+      `;
+    })
+    .join("");
+}
+
+function renderVariants(item) {
+  if (!Array.isArray(item.variants) || item.variants.length === 0) return "";
+
+  return `
+    <div class="mod-group variant-group" data-group="variants">
+      <div class="mod-group-title">
+        Choose Option <span style="color:var(--ud-accent);font-size:10px;">● REQUIRED</span>
+      </div>
+
+      <div class="mod-options">
+        ${item.variants
+          .map((variant) => {
+            const variantId = escapeHtml(variant.variant_id);
+            const label = escapeHtml(variant.label || variant.variant_name);
+            const delta = Number(variant.price_delta_cents || 0);
+
+            return `
+              <button
+                type="button"
+                class="mod-btn variant-btn"
+                data-variant-id="${variantId}"
+                onclick="event.stopPropagation(); toggleVariant('${item.id}', '${variantId}', this)"
+              >
+                ${label}
+                ${
+                  delta > 0
+                    ? `<span class="mod-price">+$${formatPrice(delta)}</span>`
+                    : ""
+                }
+              </button>
+            `;
+          })
+          .join("")}
       </div>
     </div>
-  `).join('');
+  `;
 }
 
 function renderModifiers(item) {
-  if (!item.modifiers) return '';
-  return Object.entries(item.modifiers).map(([group, options]) => `
-    <div class="mod-group">
-      <div class="mod-group-title">${group.charAt(0).toUpperCase() + group.slice(1)}</div>
-      <div class="mod-options">
-        ${options.map((opt, i) => `
-          <button type="button"
-            class="mod-btn ${i === 0 ? 'active' : ''}"
-            data-group="${group}"
-            data-code="${opt.code}"
-            onclick="event.stopPropagation(); toggleMod('${group}', '${opt.code}', this)">
-            ${opt.label}
-            ${opt.price > 0 ? `<span class="mod-price">+$${formatPrice(opt.price)}</span>` : ''}
-          </button>
-        `).join('')}
-      </div>
-    </div>
-  `).join('');
+  if (!item.modifiers) return "";
+
+  return Object.entries(item.modifiers)
+    .map(([groupKey, options]) => {
+      if (!Array.isArray(options) || options.length === 0) return "";
+
+      const first = options[0];
+      const groupId = first.group_id || groupKey;
+      const rule = getGroupRule(groupId, first.group_type);
+      const isRequired = rule.min > 0;
+      const groupTitle = escapeHtml(readableGroupName(groupKey, first));
+
+      return `
+        <div class="mod-group" data-group="${escapeHtml(groupKey)}" data-group-id="${escapeHtml(groupId)}">
+          <div class="mod-group-title">
+            ${groupTitle}
+            ${
+              isRequired
+                ? `<span style="color:var(--ud-accent);font-size:10px;">● REQUIRED</span>`
+                : ""
+            }
+            ${
+              rule.max < 99
+                ? `<span class="mod-counter" id="counter-${escapeHtml(item.id)}-${escapeHtml(groupKey)}"></span>`
+                : ""
+            }
+          </div>
+
+          <div class="mod-options">
+            ${options
+              .map((opt) => {
+                const modId = escapeHtml(opt.mod_id || opt.code);
+                const label = escapeHtml(opt.label || opt.mod_name);
+                const price = Number(opt.price_delta_cents ?? opt.price ?? 0);
+
+                return `
+                  <button
+                    type="button"
+                    class="mod-btn"
+                    data-group="${escapeHtml(groupKey)}"
+                    data-group-id="${escapeHtml(opt.group_id)}"
+                    data-mod-id="${modId}"
+                    data-code="${modId}"
+                    onclick="event.stopPropagation(); toggleMod('${escapeHtml(groupKey)}', '${modId}', this)"
+                  >
+                    ${label}
+                    ${
+                      price > 0
+                        ? `<span class="mod-price">+$${formatPrice(price)}</span>`
+                        : ""
+                    }
+                  </button>
+                `;
+              })
+              .join("")}
+          </div>
+        </div>
+      `;
+    })
+    .join("");
 }
 
 // ===================== INTERACTIONS =====================
 function selectItem(id) {
-  if (selectedItem) {
-    document.getElementById(`item-${selectedItem}`)?.classList.remove('selected');
+  if (selectedItem && selectedItem !== id) {
+    document
+      .getElementById(`item-${selectedItem}`)
+      ?.classList.remove("selected");
   }
+
   selectedItem = id;
+  selectedVariant = null;
   selectedModifiers = {};
   itemQty = 1;
-  document.getElementById(`item-${id}`)?.classList.add('selected');
 
-  const item = findItem(id);
-  if (item?.modifiers) {
-    Object.entries(item.modifiers).forEach(([group, options]) => {
-      if (options.length > 0) selectedModifiers[group] = options[0];
+  document.getElementById(`item-${id}`)?.classList.add("selected");
+
+  document.querySelectorAll(".qty-control input").forEach((input) => {
+    input.value = 1;
+  });
+
+  // Do not auto-select modifiers.
+  // Customer must explicitly choose required options.
+}
+
+function toggleVariant(itemId, variantId, btn) {
+  const item = findItem(itemId);
+  if (!item?.variants) return;
+
+  const variant = item.variants.find((v) => v.variant_id === variantId);
+  if (!variant) return;
+
+  selectedVariant = variant;
+
+  const itemEl = document.getElementById(`item-${itemId}`);
+  itemEl?.querySelectorAll(".variant-btn").forEach((button) => {
+    button.classList.remove("active");
+  });
+
+  btn.classList.add("active");
+}
+
+function toggleMod(groupKey, modId, btn) {
+  const item = findItem(selectedItem);
+  if (!item?.modifiers?.[groupKey]) return;
+
+  const option = item.modifiers[groupKey].find(
+    (opt) => (opt.mod_id || opt.code) === modId,
+  );
+
+  if (!option) return;
+
+  const groupId = option.group_id || groupKey;
+  const rule = getGroupRule(groupId, option.group_type);
+
+  if (!selectedModifiers[groupKey]) {
+    selectedModifiers[groupKey] = [];
+  }
+
+  const selectedList = selectedModifiers[groupKey];
+  const existingIndex = selectedList.findIndex(
+    (selected) => (selected.mod_id || selected.code) === modId,
+  );
+
+  // Toggle off if already selected.
+  if (existingIndex >= 0) {
+    selectedList.splice(existingIndex, 1);
+    btn.classList.remove("active");
+    updateModifierCounter(groupKey, groupId, rule);
+    updateModifierDisabledState(groupKey, rule);
+    return;
+  }
+
+  // If max 1, replace current selection.
+  if (rule.max === 1) {
+    selectedList.length = 0;
+
+    const groupEl = btn.closest(".mod-group");
+    groupEl?.querySelectorAll(".mod-btn").forEach((button) => {
+      button.classList.remove("active");
     });
   }
 
-  document.querySelectorAll('.qty-control input').forEach(inp => inp.value = 1);
+  // If max > 1, block over-selection.
+  if (rule.max > 1 && selectedList.length >= rule.max) {
+    showAlert(
+      "error",
+      `You can only select ${rule.max} option(s) for this group.`,
+    );
+    return;
+  }
+
+  selectedList.push({ ...option, group: groupKey });
+  btn.classList.add("active");
+
+  updateModifierCounter(groupKey, groupId, rule);
+  updateModifierDisabledState(groupKey, rule);
 }
 
-function toggleMod(group, code, btn) {
-  const item = findItem(selectedItem);
-  if (!item?.modifiers?.[group]) return;
-  const opt = item.modifiers[group].find(o => o.code === code);
-  if (!opt) return;
-  selectedModifiers[group] = opt;
+function updateModifierCounter(groupKey, groupId, rule) {
+  if (!selectedItem) return;
 
-  const groupBtns = btn.parentElement?.querySelectorAll('.mod-btn');
-  groupBtns?.forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
+  const selectedCount = selectedModifiers[groupKey]?.length || 0;
+  const counter = document.getElementById(
+    `counter-${selectedItem}-${groupKey}`,
+  );
+
+  if (!counter) return;
+
+  counter.textContent = rule.max < 99 ? ` (${selectedCount}/${rule.max})` : "";
+  counter.style.color =
+    selectedCount >= rule.max ? "var(--ud-accent)" : "var(--text-light)";
+}
+
+function updateModifierDisabledState(groupKey, rule) {
+  if (!selectedItem || rule.max <= 1) return;
+
+  const itemEl = document.getElementById(`item-${selectedItem}`);
+  const groupEl = itemEl?.querySelector(`.mod-group[data-group="${groupKey}"]`);
+  if (!groupEl) return;
+
+  const selectedCount = selectedModifiers[groupKey]?.length || 0;
+
+  groupEl.querySelectorAll(".mod-btn").forEach((button) => {
+    if (!button.classList.contains("active") && selectedCount >= rule.max) {
+      button.disabled = true;
+      button.style.opacity = "0.5";
+      button.style.cursor = "not-allowed";
+    } else {
+      button.disabled = false;
+      button.style.opacity = "1";
+      button.style.cursor = "pointer";
+    }
+  });
 }
 
 function changeQty(delta) {
   itemQty = Math.max(1, Math.min(10, itemQty + delta));
+
   if (selectedItem) {
     const input = document.getElementById(`qty-${selectedItem}`);
     if (input) input.value = itemQty;
   }
 }
 
-function findItem(id) {
-  return [...MENU.sandwiches, ...MENU.specialties, ...MENU.sides].find(i => i.id === id);
-}
+// ===================== VALIDATION =====================
+function validateBeforeAdd(item) {
+  if (!item) return false;
 
-function formatPrice(cents) {
-  return (cents / 100).toFixed(2);
+  if (
+    Array.isArray(item.variants) &&
+    item.variants.length > 0 &&
+    !selectedVariant
+  ) {
+    showAlert("error", `Please choose an option for ${item.name}.`);
+    return false;
+  }
+
+  if (item.modifiers) {
+    for (const [groupKey, options] of Object.entries(item.modifiers)) {
+      if (!Array.isArray(options) || options.length === 0) continue;
+
+      const first = options[0];
+      const groupId = first.group_id || groupKey;
+      const rule = getGroupRule(groupId, first.group_type);
+      const selectedCount = selectedModifiers[groupKey]?.length || 0;
+
+      if (selectedCount < rule.min) {
+        showAlert(
+          "error",
+          `Please select ${rule.min} option(s) for ${readableGroupName(groupKey, first)}.`,
+        );
+        return false;
+      }
+
+      if (selectedCount > rule.max) {
+        showAlert(
+          "error",
+          `Too many selections for ${readableGroupName(groupKey, first)}.`,
+        );
+        return false;
+      }
+    }
+  }
+
+  return true;
 }
 
 // ===================== CART =====================
@@ -144,59 +480,71 @@ function addToCart(id) {
   const item = findItem(id);
   if (!item) return;
 
+  if (selectedItem !== id) {
+    selectItem(id);
+  }
+
+  if (!validateBeforeAdd(item)) return;
+
   const qtyInput = document.getElementById(`qty-${id}`);
-  const qty = qtyInput ? Math.max(1, Math.min(10, parseInt(qtyInput.value, 10) || 1)) : 1;
+  const qty = qtyInput
+    ? Math.max(1, Math.min(10, parseInt(qtyInput.value, 10) || 1))
+    : 1;
 
-  const modsContainer = document.getElementById(`mods-${id}`);
-  const activeModBtns = modsContainer ? modsContainer.querySelectorAll('.mod-btn.active') : [];
+  const mods = Object.values(selectedModifiers).flat();
 
-  const mods = [];
-  activeModBtns.forEach(btn => {
-    const group = btn.dataset.group;
-    const code = btn.dataset.code;
-    if (item.modifiers && item.modifiers[group]) {
-      const opt = item.modifiers[group].find(o => o.code === code);
-      if (opt) mods.push({...opt, group});
-    }
-  });
+  const variantPrice = selectedVariant
+    ? Number(selectedVariant.price_delta_cents || 0)
+    : 0;
 
-  // Sort modifiers by importance (protein first, combo second, etc)
-  const groupPriority = {
-    protein: 1,
-    combo: 2,
-    extras: 3,
-    addons: 3,
-    sauce: 4,
-    special: 5,
-    hold: 99
-  };
-  mods.sort((a, b) => (groupPriority[a.group] || 50) - (groupPriority[b.group] || 50));
+  const modPrice = mods.reduce((sum, mod) => {
+    return sum + Number(mod.price_delta_cents ?? mod.price ?? 0);
+  }, 0);
 
-  const modPrice = mods.reduce((s, m) => s + (m.price || 0), 0);
-  const unitPrice = item.price + modPrice;
+  const unitPrice = Number(item.price || 0) + variantPrice + modPrice;
   const totalPrice = unitPrice * qty;
 
   cart.push({
     id: item.id,
+    item_id: item.item_id || item.id,
     name: item.name,
+
+    variant_id: selectedVariant?.variant_id || null,
+    variant_name:
+      selectedVariant?.variant_name || selectedVariant?.label || null,
+    variant_price_delta_cents: variantPrice,
+
     qty,
+    quantity: qty,
+
+    price: Number(item.price || 0),
     unitPrice,
     totalPrice,
-    price: item.price,  // Raw item price without modifiers
-    modifiers: mods,
+
+    modifiers: mods.map((mod) => ({
+      group: mod.group || null,
+      group_id: mod.group_id || null,
+      group_type: mod.group_type || null,
+      code: mod.code || mod.mod_id,
+      mod_id: mod.mod_id || mod.code,
+      label: mod.label || mod.mod_name,
+      mod_name: mod.mod_name || mod.label,
+      price: Number(mod.price_delta_cents ?? mod.price ?? 0),
+      price_delta_cents: Number(mod.price_delta_cents ?? mod.price ?? 0),
+    })),
   });
 
   if (qtyInput) qtyInput.value = 1;
 
-  if (selectedItem === id) {
-    document.getElementById(`item-${id}`)?.classList.remove('selected');
-    selectedItem = null;
-    selectedModifiers = {};
-    itemQty = 1;
-  }
+  document.getElementById(`item-${id}`)?.classList.remove("selected");
+
+  selectedItem = null;
+  selectedVariant = null;
+  selectedModifiers = {};
+  itemQty = 1;
 
   updateCart();
-  showAlert('success', `${item.name} added to your order!`);
+  showAlert("success", `${item.name} added to your order!`);
 }
 
 function removeFromCart(index) {
@@ -205,15 +553,16 @@ function removeFromCart(index) {
 }
 
 function updateCart() {
-  const badge = document.getElementById('cartBadge');
-  const content = document.getElementById('cartContent');
-  const checkoutPanel = document.getElementById('checkoutPanel');
+  const badge = document.getElementById("cartBadge");
+  const content = document.getElementById("cartContent");
+  const checkoutPanel = document.getElementById("checkoutPanel");
 
-  const totalQty = cart.reduce((s, i) => s + i.qty, 0);
+  const totalQty = cart.reduce((sum, item) => sum + item.qty, 0);
 
   if (totalQty === 0) {
-    if (badge) badge.style.display = 'none';
-    if (checkoutPanel) checkoutPanel.style.display = 'none';
+    if (badge) badge.style.display = "none";
+    if (checkoutPanel) checkoutPanel.style.display = "block";
+
     if (content) {
       content.innerHTML = `
         <div class="cart-empty">
@@ -222,95 +571,188 @@ function updateCart() {
         </div>
       `;
     }
+
     return;
   }
 
   if (badge) {
-    badge.style.display = 'flex';
+    badge.style.display = "flex";
     badge.textContent = totalQty;
   }
-  if (checkoutPanel) checkoutPanel.style.display = 'block';
 
-  const subtotal = cart.reduce((s, i) => s + i.totalPrice, 0);
+  if (checkoutPanel) checkoutPanel.style.display = "block";
+
+  const subtotal = cart.reduce((sum, item) => sum + item.totalPrice, 0);
   const tax = Math.round(subtotal * TAX_RATE);
   const grand = subtotal + tax;
 
-  if (content) {
-    content.innerHTML = `
-      ${cart.map((item, idx) => {
-        const comboMods = item.modifiers.filter(m => m.group === 'combo' || (m.code && m.code.includes('COMBO')));
-        const otherMods = item.modifiers.filter(m => m.group !== 'combo' && !(m.code && m.code.includes('COMBO')));
+  if (!content) return;
+
+  content.innerHTML = `
+    ${cart
+      .map((item, index) => {
+        const comboMods = item.modifiers.filter((modifier) =>
+          String(modifier.mod_id || modifier.code || "").includes("COMBO"),
+        );
+
+        const otherMods = item.modifiers.filter(
+          (modifier) =>
+            !String(modifier.mod_id || modifier.code || "").includes("COMBO"),
+        );
+
         return `
-        <div class="cart-item">
-          <div class="cart-item-info">
-            <h4>${item.qty}x ${item.name}</h4>
-            ${comboMods.length ? `
-              <div class="cart-combo">🍟 COMBO: ${comboMods.map(m => m.label.replace('Add ', '')).join(' + ')}</div>
-            ` : ''}
-            ${otherMods.length ? `
-              <div class="cart-mods">${otherMods.map(m => m.label).join(' • ')}</div>
-            ` : ''}
+          <div class="cart-item">
+            <div class="cart-item-info">
+              <h4>${item.qty}x ${escapeHtml(item.name)}</h4>
+
+              ${
+                item.variant_name
+                  ? `<div class="cart-mods"><span class="cart-mod-tag">${escapeHtml(item.variant_name)}</span></div>`
+                  : ""
+              }
+
+              ${
+                comboMods.length
+                  ? `
+                    <div class="cart-combo">
+                      🍟 COMBO: ${comboMods
+                        .map((modifier) =>
+                          escapeHtml(modifier.label || modifier.mod_name),
+                        )
+                        .join(" + ")}
+                    </div>
+                  `
+                  : ""
+              }
+
+              ${
+                otherMods.length
+                  ? `
+                    <div class="cart-mods">
+                      ${otherMods
+                        .map((modifier) => {
+                          const price = Number(
+                            modifier.price_delta_cents || modifier.price || 0,
+                          );
+                          return `
+                            <span class="cart-mod-tag">
+                              ${escapeHtml(modifier.label || modifier.mod_name)}
+                              ${price > 0 ? ` (+$${formatPrice(price)})` : ""}
+                            </span>
+                          `;
+                        })
+                        .join(" ")}
+                    </div>
+                  `
+                  : ""
+              }
+
+              <div style="font-size:11px;color:var(--text-light);margin-top:4px;">
+                Unit: $${formatPrice(item.unitPrice)} × ${item.qty}
+              </div>
+            </div>
+
+            <div style="display:flex;align-items:center;gap:12px">
+              <div class="cart-item-price">$${formatPrice(item.totalPrice)}</div>
+              <button
+                onclick="removeFromCart(${index})"
+                style="background:none;border:none;cursor:pointer;font-size:16px;color:var(--text-light)"
+              >
+                🗑️
+              </button>
+            </div>
           </div>
-          <div style="display:flex;align-items:center;gap:12px">
-            <div class="cart-item-price">$${formatPrice(item.totalPrice)}</div>
-            <button onclick="removeFromCart(${idx})" style="background:none;border:none;cursor:pointer;font-size:16px;color:var(--text-light)">🗑️</button>
-          </div>
-        </div>
-      `}).join('')}
-      <div class="cart-totals">
-        <div class="total-row">
-          <span>Subtotal</span>
-          <span>$${formatPrice(subtotal)}</span>
-        </div>
-        <div class="total-row tax">
-          <span>Tax (est.)</span>
-          <span>$${formatPrice(tax)}</span>
-        </div>
-        <div class="total-row grand">
-          <span>Total</span>
-          <span>$${formatPrice(grand)}</span>
-        </div>
+        `;
+      })
+      .join("")}
+
+    <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">
+      <label style="display:block;font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px;">
+        Special Instructions
+      </label>
+      <textarea
+        id="cartNotes"
+        name="special_instructions"
+        style="width:100%;padding:8px 10px;border:1.5px solid var(--input-border);border-radius:var(--radius-sm);font-size:13px;font-family:inherit;min-height:60px;resize:vertical;"
+        placeholder="Allergies, dietary needs, extra requests..."
+      ></textarea>
+    </div>
+
+    <div class="cart-totals">
+      <div class="total-row">
+        <span>otal)}</span>
       </div>
-    `;
-  }
+      <div class="total-row tax">
+        <span>Tax (est. 9.52%)</span>
+        <span>$${formatPrice(tax)}</span>
+      </div>
+      <div class="total-row grand">
+        <span>Total</span>
+        <span>$${formatPrice(grand)}</span>
+      </div>
+    </div>
+
+    <div style="margin-top:12px;">
+      <button onclick="submitOrder()" class="submit-btn" id="cartCheckoutBtn" style="width:100%;">
+        💳 Checkout
+      </button>
+    </div>
+  `;
 }
 
 function scrollToCart() {
-  document.getElementById('cartPanel')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  document
+    .getElementById("cartPanel")
+    ?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 // ===================== HOURS VALIDATION =====================
 function isDeliOpen(pickupTime) {
+  if (!pickupTime || pickupTime === "ASAP") {
+    return { open: true, message: "ASAP selected." };
+  }
+
   const now = new Date();
-  const cst = new Date(now.toLocaleString('en-US', { timeZone: HOURS.timezone }));
-  const dayNames = ['sun','mon','tue','wed','thu','fri','sat'];
+  const cst = new Date(
+    now.toLocaleString("en-US", { timeZone: HOURS.timezone }),
+  );
+  const dayNames = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
   const today = dayNames[cst.getDay()];
   const hours = HOURS[today];
 
-  if (!hours) return { open: false, message: 'Deli is closed today.' };
+  if (!hours) return { open: false, message: "Deli is closed today." };
 
-  const [pickupHour, pickupMin] = pickupTime.split(':').map(Number);
+  const [pickupHour, pickupMin] = pickupTime.split(":").map(Number);
   const pickupMinutes = pickupHour * 60 + pickupMin;
-  const [openHour, openMin] = hours.open.split(':').map(Number);
+
+  const [openHour, openMin] = hours.open.split(":").map(Number);
   const openMinutes = openHour * 60 + openMin;
-  const [closeHour, closeMin] = hours.close.split(':').map(Number);
+
+  const [closeHour, closeMin] = hours.close.split(":").map(Number);
   const closeMinutes = closeHour * 60 + closeMin;
 
   const isOpen = pickupMinutes >= openMinutes && pickupMinutes <= closeMinutes;
 
   return {
     open: isOpen,
-    message: isOpen ? 'Deli is open!' : `Deli is closed at ${pickupTime}. Hours: ${hours.open} - ${hours.close}`
+    message: isOpen
+      ? "Deli is open."
+      : `Deli is closed at ${pickupTime}. Hours: ${hours.open} - ${hours.close}`,
   };
 }
 
 function populatePickupTimes() {
-  const select = document.getElementById('pickupTime');
+  const select =
+    document.getElementById("pickupTime") ||
+    document.querySelector('select[name="pickup_time"]');
+
   if (!select) return;
 
   const now = new Date();
-  const cst = new Date(now.toLocaleString('en-US', { timeZone: HOURS.timezone }));
-  const dayNames = ['sun','mon','tue','wed','thu','fri','sat'];
+  const cst = new Date(
+    now.toLocaleString("en-US", { timeZone: HOURS.timezone }),
+  );
+  const dayNames = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
   const today = dayNames[cst.getDay()];
   const hours = HOURS[today];
 
@@ -319,248 +761,361 @@ function populatePickupTimes() {
     return;
   }
 
-  const [openHour, openMin] = hours.open.split(':').map(Number);
-  const [closeHour, closeMin] = hours.close.split(':').map(Number);
+  const [openHour, openMin] = hours.open.split(":").map(Number);
+  const [closeHour, closeMin] = hours.close.split(":").map(Number);
+
   const openMinutes = openHour * 60 + openMin;
   const closeMinutes = closeHour * 60 + closeMin;
 
   let options = '<option value="ASAP">ASAP</option>';
+
   for (let mins = openMinutes; mins <= closeMinutes; mins += 15) {
-    const h = Math.floor(mins / 60);
-    const m = mins % 60;
-    const timeStr = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
-    const ampm = h >= 12 ? 'PM' : 'AM';
-    const displayH = h > 12 ? h - 12 : (h === 0 ? 12 : h);
-    const displayTime = `${displayH}:${String(m).padStart(2, '0')} ${ampm}`;
+    const hour = Math.floor(mins / 60);
+    const min = mins % 60;
+
+    const timeStr = `${String(hour).padStart(2, "0")}:${String(min).padStart(2, "0")}`;
+    const ampm = hour >= 12 ? "PM" : "AM";
+    const displayHour = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
+    const displayTime = `${displayHour}:${String(min).padStart(2, "0")} ${ampm}`;
+
     options += `<option value="${timeStr}">${displayTime}</option>`;
   }
+
   select.innerHTML = options;
 }
 
-// ===================== CHECKOUT / WEBHOOK POST =====================
+// ===================== CHECKOUT =====================
 async function handleCheckout(e) {
-  e.preventDefault();
+  if (e?.preventDefault) e.preventDefault();
+  return submitOrder();
+}
 
-  const btn = document.getElementById('submitBtn');
-  if (!btn) {
-    showAlert('error', 'System error. Please refresh and try again.');
-    return;
-  }
+async function submitOrder() {
+  const btn =
+    document.getElementById("cartCheckoutBtn") ||
+    document.getElementById("submitBtn");
 
   if (cart.length === 0) {
-    showAlert('error', 'Your cart is empty. Please add at least one item.');
+    showAlert("error", "Your cart is empty. Please add at least one item.");
     return;
   }
 
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span> Sending...';
+  const customerName =
+    document.querySelector('input[name="name"]')?.value?.trim() || "";
 
-  // Read form values directly from DOM (CODY-PITFALLS: avoid FormData staleness)
-  const customerName = document.querySelector('input[name="name"]')?.value?.trim() || '';
-  const email = document.querySelector('input[name="email"]')?.value?.trim() || '';
-  let phone = document.querySelector('input[name="phone"]')?.value?.trim() || '';
-  const pickupTime = document.querySelector('select[name="pickup_time"]')?.value?.trim() || '';
-  const specialInstructions = document.querySelector('textarea[name="special_instructions"]')?.value?.trim() || '';
+  const email =
+    document.querySelector('input[name="email"]')?.value?.trim() || "";
 
-  // Validate pickup time (skip for ASAP)
-  if (pickupTime && pickupTime !== 'ASAP') {
-    const hoursCheck = isDeliOpen(pickupTime);
-    if (!hoursCheck.open) {
-      showAlert('error', hoursCheck.message);
-      btn.disabled = false;
-      btn.innerHTML = '💳 Send Payment Link';
-      return;
-    }
+  let phone =
+    document.querySelector('input[name="phone"]')?.value?.trim() || "";
+
+  const pickupTime =
+    document.querySelector('select[name="pickup_time"]')?.value?.trim() ||
+    document.getElementById("pickupTime")?.value?.trim() ||
+    "ASAP";
+
+  const specialInstructions =
+    document.getElementById("cartNotes")?.value?.trim() ||
+    document
+      .querySelector('textarea[name="special_instructions"]')
+      ?.value?.trim() ||
+    "";
+
+  if (!customerName || customerName.length < 2) {
+    showAlert("error", "Please enter your full name.");
+    document.getElementById("checkoutPanel")?.scrollIntoView({
+      behavior: "smooth",
+      block: "center",
+    });
+    return;
   }
 
-  // Phone normalization
-  const phoneDigits = phone.replace(/\D/g, '');
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    showAlert("error", "Please enter a valid email address.");
+    return;
+  }
+
+  const phoneDigits = phone.replace(/\D/g, "");
   if (phoneDigits.length < 10 || phoneDigits.length > 11) {
-    showAlert('error', 'Please enter a valid 10-digit phone number.');
-    btn.disabled = false;
-    btn.innerHTML = '💳 Send Payment Link';
+    showAlert("error", "Please enter a valid 10-digit phone number.");
     return;
   }
   phone = phoneDigits;
 
-  // Email validation
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email)) {
-    showAlert('error', 'Please enter a valid email address.');
-    btn.disabled = false;
-    btn.innerHTML = '💳 Send Payment Link';
+  const hoursCheck = isDeliOpen(pickupTime);
+  if (!hoursCheck.open) {
+    showAlert("error", hoursCheck.message);
     return;
   }
 
-  if (!customerName || customerName.length < 2) {
-    showAlert('error', 'Please enter your full name.');
-    btn.disabled = false;
-    btn.innerHTML = '💳 Send Payment Link';
-    return;
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Sending...';
   }
-
-  // Build payload for V4 workflow (cents, flat structure)
-  const items = cart.map(cartItem => {
-    return {
-      name: cartItem.name,
-      qty: cartItem.qty,
-      base_price_cents: cartItem.price || cartItem.unitPrice,
-      modifiers: cartItem.modifiers.map(m => ({
-        label: m.label,
-        price_cents: m.price || 0
-      }))
-    };
-  });
 
   const payload = {
     body: {
       customer: {
         name: customerName,
-        email: email,
-        phone: phone
+        email,
+        phone,
       },
-      items: items,
-      notes: specialInstructions || ''
-    }
+      items: cart.map((cartItem) => ({
+        item_id: cartItem.item_id,
+        variant_id: cartItem.variant_id || null,
+        quantity: cartItem.qty,
+        modifiers: cartItem.modifiers.map((modifier) => ({
+          group_id: modifier.group_id,
+          mod_id: modifier.mod_id,
+        })),
+      })),
+      notes: specialInstructions || "",
+      pickup_time: pickupTime || "25-30 mins",
+      source: "pickup-order",
+    },
   };
 
-  // Debug log (remove in prod)
-  console.log('Webhook payload:', payload);
+  console.log("Canonical webhook payload:", payload);
 
   try {
-    const response = await fetch('https://n8n.systack.net/webhook/utopia-deli-order-v4', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
+    const response = await fetch(CHECKOUT_ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
     });
 
-    // Handle non-JSON responses gracefully (CODY-015)
     let result;
-    const contentType = response.headers.get('content-type') || '';
-    if (contentType.includes('application/json')) {
+    const contentType = response.headers.get("content-type") || "";
+
+    if (contentType.includes("application/json")) {
       result = await response.json();
     } else {
       const text = await response.text();
-      result = { success: response.ok, message: text };
+      result = {
+        success: response.ok,
+        ok: response.ok,
+        message: text,
+      };
     }
 
-    if (!response.ok || result.success === false) {
-      showAlert('error', result.message || 'Something went wrong. Please try again or call us.');
-    } else {
-      showConfirmation(
-        result.message || 'Click the payment link below to complete your order. We\'ll start preparing your food once payment is completed.',
-        result.payment_link
+    if (!response.ok || result.success === false || result.ok === false) {
+      showAlert(
+        "error",
+        result.message ||
+          result.error ||
+          "Something went wrong. Please try again or call us.",
       );
+      return;
     }
+
+    showConfirmation(
+      result.message ||
+        "Click the payment link below to complete your order. We'll begin preparing your food once payment is completed.",
+      result.payment_link || result.square_link || result.payment_url,
+    );
   } catch (err) {
-    console.error('Checkout error:', err);
-    showAlert('error', 'Could not reach the ordering system. Please try again or call us directly.');
+    console.error("Checkout error:", err);
+    showAlert(
+      "error",
+      "Could not reach the ordering system. Please try again or call us directly.",
+    );
   } finally {
-    btn.disabled = false;
-    btn.innerHTML = '💳 Send Payment Link';
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = "💳 Checkout";
+    }
   }
 }
 
-// ===================== CONFIRMATION PAGE =====================
+// ===================== CONFIRMATION =====================
 function showConfirmation(message, paymentLink) {
-  const main = document.querySelector('.main');
-  const hero = document.querySelector('.hero');
-  if (main) main.style.display = 'none';
-  if (hero) hero.style.display = 'none';
+  const main = document.querySelector(".main");
+  const hero = document.querySelector(".hero");
 
-  const existing = document.getElementById('confirmationPage');
+  if (main) main.style.display = "none";
+  if (hero) hero.style.display = "none";
+
+  const existing = document.getElementById("confirmationPage");
   if (existing) existing.remove();
 
-  const confirmation = document.createElement('div');
-  confirmation.id = 'confirmationPage';
-  
-  // Build order summary HTML
-  const orderItemsHtml = cart.map(item => {
-    const comboMod = item.modifiers.find(m => m.code && m.code.includes('COMBO'));
-    const otherMods = item.modifiers.filter(m => !m.code || !m.code.includes('COMBO'));
-    return `
-      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eee;">
-        <div style="text-align:left;">
-          <strong>${item.qty}x ${item.name}</strong>
-          ${comboMod ? `<div style="color:#AF3D4B;font-size:13px;">🍟 COMBO: ${comboMod.label.replace('Add ', '')}</div>` : ''}
-          ${otherMods.length ? `<div style="color:#6B7280;font-size:12px;">${otherMods.map(m => m.label).join(' • ')}</div>` : ''}
-        </div>
-        <span style="font-weight:600;">$${formatPrice(item.totalPrice)}</span>
-      </div>
-    `;
-  }).join('');
-  
-  const subtotal = cart.reduce((s, i) => s + i.totalPrice, 0);
+  const subtotal = cart.reduce((sum, item) => sum + item.totalPrice, 0);
   const tax = Math.round(subtotal * TAX_RATE);
   const grand = subtotal + tax;
-  
+
+  const orderItemsHtml = cart
+    .map((item) => {
+      const comboMods = item.modifiers.filter((modifier) =>
+        String(modifier.mod_id || "").includes("COMBO"),
+      );
+
+      const otherMods = item.modifiers.filter(
+        (modifier) => !String(modifier.mod_id || "").includes("COMBO"),
+      );
+
+      return `
+        <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #eee;">
+          <div style="text-align:left;">
+            <div style="font-weight:600;font-size:14px;">${item.qty}× ${escapeHtml(item.name)}</div>
+
+            ${
+              item.variant_name
+                ? `<div style="color:#6B7280;font-size:12px;margin-top:2px;">${escapeHtml(item.variant_name)}</div>`
+                : ""
+            }
+
+            ${
+              comboMods.length
+                ? `<div style="color:#AF3D4B;font-size:12px;margin-top:2px;">🍟 COMBO: ${comboMods
+                    .map((modifier) =>
+                      escapeHtml(modifier.label || modifier.mod_name),
+                    )
+                    .join(" + ")}</div>`
+                : ""
+            }
+
+            ${
+              otherMods.length
+                ? `<div style="color:#6B7280;font-size:12px;margin-top:2px;">${otherMods
+                    .map((modifier) =>
+                      escapeHtml(modifier.label || modifier.mod_name),
+                    )
+                    .join(" • ")}</div>`
+                : ""
+            }
+          </div>
+
+          <span style="font-weight:700;color:#AF3D4B;font-size:14px;white-space:nowrap;">
+            $${formatPrice(item.totalPrice)}
+          </span>
+        </div>
+      `;
+    })
+    .join("");
+
+  const confirmation = document.createElement("div");
+  confirmation.id = "confirmationPage";
+
   confirmation.innerHTML = `
-    <div style="max-width:448px;margin:40px auto;padding:24px;background:#fff;border-radius:14px;box-shadow:0 4px 24px rgba(17,24,39,0.08);text-align:center;">
-      <div style="font-size:48px;margin-bottom:16px;">🎉</div>
-      <h2 style="font-size:24px;font-weight:800;color:#590B3F;margin-bottom:12px;">Order Received!</h2>
-      <p style="font-size:16px;color:#6B7280;margin-bottom:24px;line-height:1.5;">
-        Click the payment link below to complete your payment.<br>
-        We'll start working on your order once payment is completed.
-      </p>
-      
-      <div style="text-align:left;margin:20px 0;padding:16px;background:#f9f9f9;border-radius:8px;">
-        <h3 style="font-size:16px;color:#590B3F;margin-bottom:12px;text-align:center;">Your Order</h3>
-        ${orderItemsHtml}
-        <div style="display:flex;justify-content:space-between;padding:8px 0;margin-top:8px;border-top:2px solid #590B3F;">
+    <div style="max-width:520px;margin:40px auto;padding:24px;background:#fff;border-radius:14px;box-shadow:0 4px 24px rgba(17,24,39,0.08);">
+      <div style="background:linear-gradient(135deg, #590B3F 0%, #7a1a55 50%, #754681 100%);color:white;padding:32px 24px;border-radius:14px 14px 0 0;text-align:center;margin:-24px -24px 24px -24px;">
+        <div style="font-size:56px;margin-bottom:12px;">🎉</div>
+        <h2 style="font-size:28px;font-weight:800;margin:0 0 8px 0;">We Got You!</h2>
+        <p style="font-size:16px;opacity:0.9;margin:0;">We've received your order.</p>
+
+      <h3 style="font-size:16px;font-weight:700;color:#590B3F;margin:20px 0 12px 0;">Your Order</h3>
+      ${orderItemsHtml}
+
+      <div style="margin-top:16px;padding-top:12px;border-top:2px solid #eee;">
+        <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:14px;">
           <span>Subtotal</span>
           <span>$${formatPrice(subtotal)}</span>
         </div>
-        <div style="display:flex;justify-content:space-between;padding:4px 0;color:#6B7280;">
-          <span>Tax (est.)</span>
+        <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:14px;color:#6B7280;">
+          <span>Tax (est. 9.52%)</span>
           <span>$${formatPrice(tax)}</span>
         </div>
-        <div style="display:flex;justify-content:space-between;padding:4px 0;font-weight:800;font-size:18px;color:#590B3F;">
+        <div style="display:flex;justify-content:space-between;padding:8px 0;margin-top:8px;border-top:1px solid #eee;font-weight:800;font-size:18px;color:#590B3F;">
           <span>Total</span>
           <span>$${formatPrice(grand)}</span>
         </div>
       </div>
+
+      <div style="text-align:center;margin-top:24px;">
+        
+        <p style="font-size:14px;color:#374151;margin-top:20px;line-height:1.6;font-weight:600;">
+          ${escapeHtml(message)}
+        </p>
       
-      <p style="font-size:14px;color:#374151;margin-bottom:24px;">${message}</p>
-      ${paymentLink ? `<a href="${paymentLink}" target="_blank" style="display:inline-block;background:#AF3D4B;color:#fff;padding:14px 32px;border-radius:50px;font-weight:700;font-size:16px;text-decoration:none;margin-bottom:16px;">💳 Pay Now</a>` : ''}
-      <p style="font-size:12px;color:#9CA3AF;">Didn't receive the email? Check your spam folder or call us.</p>
+        ${
+          paymentLink
+            ? `" target="_blank" style="display:inline-block;background:#AF3D4B;color:#fff;padding:16px 40px;border-radius:50px;font-weight:700;font-size:16px;text-decoration:none;">💳 Complete Payment</a>`
+            : ""
+        }
+
+        <p style="font-size:12px;color:#6B7280;margin-top:12px;line-height:1.5;">
+          Payment links expire at 2:00 AM CT. Didn't receive the email? Check spam or call us.
+        </p>
+      </div>
     </div>
   `;
-  document.body.appendChild(confirmation);
+
+  const footer = document.getElementById("pageFooter");
+
+  if (footer) {
+    document.body.insertBefore(confirmation, footer);
+  } else {
+    document.body.appendChild(confirmation);
+  }
+
+  window.scrollTo(0, 0);
 }
 
 // ===================== ALERTS =====================
 function showAlert(type, msg) {
-  const el = document.getElementById(`alert${type.charAt(0).toUpperCase() + type.slice(1)}`);
-  if (!el) return;
+  const el = document.getElementById(
+    `alert${type.charAt(0).toUpperCase() + type.slice(1)}`,
+  );
+
+  if (!el) {
+    console.warn(`${type.toUpperCase()}: ${msg}`);
+    return;
+  }
+
   el.textContent = msg;
-  el.classList.add('show');
-  setTimeout(() => el.classList.remove('show'), 5000);
+  el.classList.add("show");
+
+  setTimeout(() => {
+    el.classList.remove("show");
+  }, 5000);
 }
 
-// ===================== HOURS CHECK =====================
+// ===================== HOURS DISPLAY =====================
 function checkHours() {
   const now = new Date();
-  const cst = new Date(now.toLocaleString('en-US', { timeZone: 'America/Chicago' }));
+  const cst = new Date(
+    now.toLocaleString("en-US", { timeZone: HOURS.timezone }),
+  );
   const day = cst.getDay();
   const hour = cst.getHours();
   const min = cst.getMinutes();
   const timeVal = hour * 60 + min;
 
-  const isWeekday = day >= 1 && day <= 6;
-  const isOpen = isWeekday && timeVal >= 750 && timeVal <= 1170; // 12:30 - 19:30
+  const isOpenDay = day >= 1 && day <= 6;
+  const isOpen = isOpenDay && timeVal >= 750 && timeVal <= 1170;
 
-  const pill = document.getElementById('hoursPill');
-  const text = document.getElementById('hoursText');
+  const pill = document.getElementById("hoursPill");
+  const text = document.getElementById("hoursText");
 
   if (!isOpen && pill) {
-    pill.classList.add('closed');
-    if (text) text.textContent = 'Currently Closed · Opens Mon–Sat 12:30 PM';
+    pill.classList.add("closed");
+    if (text) text.textContent = "Currently Closed · Opens Mon–Sat 12:30 PM";
   }
 }
 
 // ===================== INIT =====================
-if (typeof MENU !== 'undefined') {
+function initOrderForm() {
+  if (typeof window.MENU === "undefined") {
+    console.error(
+      "MENU is not loaded. Make sure menu-data.js is loaded before order-form.js.",
+    );
+    return;
+  }
+
   renderMenu();
   checkHours();
   populatePickupTimes();
+
+  const form =
+    document.getElementById("checkoutForm") || document.querySelector("form");
+
+  if (form && form.tagName === "FORM") {
+    form.addEventListener("submit", handleCheckout);
+  }
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initOrderForm);
+} else {
+  initOrderForm();
 }
