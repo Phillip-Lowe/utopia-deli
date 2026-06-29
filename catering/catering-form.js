@@ -252,7 +252,7 @@
     const name = document.getElementById('mp-name').value.trim();
     const phone = document.getElementById('mp-phone').value.trim();
     const email = document.getElementById('mp-email').value.trim();
-    const pickup = document.getElementById('mp-pickup').value;
+    const pickup = 'Thursday 12:30 PM - 7:30 PM';
     const notes = document.getElementById('mp-notes').value.trim();
 
     if (!name || !phone || !email) {
