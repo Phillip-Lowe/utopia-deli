@@ -954,13 +954,28 @@ function showConfirmation(message, paymentLink) {
 
   const orderItemsHtml = cart
     .map((item) => {
-      const comboMods = item.modifiers.filter((modifier) =>
-        String(modifier.mod_id || "").includes("COMBO"),
+      const comboMods = item.modifiers.filter(
+        (m) =>
+          m.group_key === "combo" ||
+          m.group === "combo" ||
+          String(m.group_id || "").includes("_COMBO") ||
+          String(m.mod_id || "").includes("COMBO"),
       );
 
       const otherMods = item.modifiers.filter(
-        (modifier) => !String(modifier.mod_id || "").includes("COMBO"),
+        (m) =>
+          !(
+            m.group_key === "combo" ||
+            m.group === "combo" ||
+            String(m.group_id || "").includes("_COMBO") ||
+            String(m.mod_id || "").includes("COMBO")
+          ),
       );
+
+      const modPriceLabel = (m) => {
+        const price = Number(m.price_delta_cents ?? m.price ?? 0);
+        return price > 0 ? ` (+$${formatPrice(price)})` : "";
+      };
 
       return `
         <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #eee;">
@@ -975,23 +990,31 @@ function showConfirmation(message, paymentLink) {
 
             ${
               comboMods.length
-                ? `<div style="color:#AF3D4B;font-size:12px;margin-top:2px;">🍟 COMBO: ${comboMods
-                    .map((modifier) =>
-                      escapeHtml(modifier.label || modifier.mod_name),
-                    )
-                    .join(" + ")}</div>`
+                ? `<div style="color:#AF3D4B;font-size:12px;margin-top:2px;">
+                    🍟 COMBO: ${comboMods
+                      .map((m) =>
+                        `${escapeHtml(String(m.label || m.mod_name || "").replace("Add ", ""))}${modPriceLabel(m)}`,
+                      )
+                      .join(" + ")}
+                  </div>`
                 : ""
             }
 
             ${
               otherMods.length
-                ? `<div style="color:#6B7280;font-size:12px;margin-top:2px;">${otherMods
-                    .map((modifier) =>
-                      escapeHtml(modifier.label || modifier.mod_name),
-                    )
-                    .join(" • ")}</div>`
+                ? `<div style="color:#6B7280;font-size:12px;margin-top:2px;">
+                    ${otherMods
+                      .map((m) =>
+                        `${escapeHtml(m.label || m.mod_name)}${modPriceLabel(m)}`,
+                      )
+                      .join(" • ")}
+                  </div>`
                 : ""
             }
+
+            <div style="font-size:11px;color:#9CA3AF;margin-top:3px;">
+              Unit: $${formatPrice(item.unitPrice)} × ${item.qty}
+            </div>
           </div>
 
           <span style="font-weight:700;color:#AF3D4B;font-size:14px;white-space:nowrap;">
