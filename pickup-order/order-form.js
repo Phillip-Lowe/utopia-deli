@@ -636,7 +636,7 @@ function updateCart() {
                             🍟 COMBO: ${comboMods
                               .map(
                                 (m) =>
-                                  `${esc(String(m.label || m.mod_name || "").replace("Add ", ""))}${modPriceLabel(m)}`,
+                                  `${esc(String(m.label || m.mod_name || "").replace("Add ", ""))} (included)`,
                               )
                               .join(" + ")}
                           </div>
@@ -985,7 +985,7 @@ function showConfirmation(message, squareLink) {
                           🍟 COMBO: ${comboMods
                             .map(
                               (m) =>
-                                `${esc(String(m.label || m.mod_name || "").replace("Add ", ""))}${modPriceLabel(m)}`,
+                                `${esc(String(m.label || m.mod_name || "").replace("Add ", ""))} (included)`,
                             )
                             .join(" + ")}
                         </div>`
@@ -1062,7 +1062,7 @@ function showConfirmation(message, squareLink) {
 
               ${
                 squareLink
-                  ? `" target="_blank" style="display:inline-block;background:#AF3D4B;color:#fff;padding:16px 40px;border-radius:50px;font-weight:700;font-size:16px;text-decoration:none;transition:all 0.2s;">💳 Complete Payment</a>`
+                  ? `<a href="${squareLink}" target="_blank" style="display:inline-block;background:#AF3D4B;color:#fff;padding:16px 40px;border-radius:50px;font-weight:700;font-size:16px;text-decoration:none;transition:all 0.2s;">💳 Complete Payment</a>`
                   : ""
               }
 
