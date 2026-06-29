@@ -552,155 +552,145 @@ function removeFromCart(index) {
 }
 
 function updateCart() {
-  const badge = document.getElementById("cartBadge");
-  const content = document.getElementById("cartContent");
-  const checkoutPanel = document.getElementById("checkoutPanel");
+        const badge = document.getElementById("cartBadge");
+        const content = document.getElementById("cartContent");
+        const checkoutPanel = document.getElementById("checkoutPanel");
 
-  const totalQty = cart.reduce((sum, item) => sum + item.qty, 0);
+        const esc = (value) =>
+          String(value ?? "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
 
-  if (totalQty === 0) {
-    if (badge) badge.style.display = "none";
-    if (checkoutPanel) checkoutPanel.style.display = "block";
+        const modPriceLabel = (m) => {
+          const price = Number(m.price_delta_cents ?? m.price ?? m.price_cents ?? 0);
+          return price > 0 ? ` (+$${formatPrice(price)})` : "";
+        };
 
-    if (content) {
-      content.innerHTML = `
-        <div class="cart-empty">
-          <div class="emoji">🛒</div>
-          <p>Your cart is empty.<br>Select an item to get started.</p>
-        </div>
-      `;
-    }
+        const totalQty = cart.reduce((s, i) => s + i.qty, 0);
 
-    return;
-  }
-
-  if (badge) {
-    badge.style.display = "flex";
-    badge.textContent = totalQty;
-  }
-
-  if (checkoutPanel) checkoutPanel.style.display = "block";
-
-  const subtotal = cart.reduce((sum, item) => sum + item.totalPrice, 0);
-  const tax = Math.round(subtotal * TAX_RATE);
-  const grand = subtotal + tax;
-
-  if (!content) return;
-
-  content.innerHTML = `
-    ${cart
-      .map((item, index) => {
-        const comboMods = item.modifiers.filter((modifier) =>
-          String(modifier.mod_id || modifier.code || "").includes("COMBO"),
-        );
-
-        const otherMods = item.modifiers.filter(
-          (modifier) =>
-            !String(modifier.mod_id || modifier.code || "").includes("COMBO"),
-        );
-
-        return `
-          <div class="cart-item">
-            <div class="cart-item-info">
-              <h4>${item.qty}x ${escapeHtml(item.name)}</h4>
-
-              ${
-                item.variant_name
-                  ? `<div class="cart-mods"><span class="cart-mod-tag">${escapeHtml(item.variant_name)}</span></div>`
-                  : ""
-              }
-
-              ${
-                comboMods.length
-                  ? `
-                    <div class="cart-combo">
-                      🍟 COMBO: ${comboMods
-                        .map((modifier) =>
-                          escapeHtml(modifier.label || modifier.mod_name),
-                        )
-                        .join(" + ")}
-                    </div>
-                  `
-                  : ""
-              }
-
-              ${
-                otherMods.length
-                  ? `
-                    <div class="cart-mods">
-                      ${otherMods
-                        .map((modifier) => {
-                          const price = Number(
-                            modifier.price_delta_cents || modifier.price || 0,
-                          );
-                          return `
-                            <span class="cart-mod-tag">
-                              ${escapeHtml(modifier.label || modifier.mod_name)}
-                              ${price > 0 ? ` (+$${formatPrice(price)})` : ""}
-                            </span>
-                          `;
-                        })
-                        .join(" ")}
-                    </div>
-                  `
-                  : ""
-              }
-
-              <div style="font-size:11px;color:var(--text-light);margin-top:4px;">
-                Unit: $${formatPrice(item.unitPrice)} × ${item.qty}
-              </div>
+        if (totalQty === 0) {
+          badge.style.display = "none";
+          content.innerHTML = `
+            <div class="cart-empty">
+              <div class="emoji">🛒</div>
+              <p>Your cart is empty.<br>Select an item to get started.</p>
             </div>
+          `;
+          return;
+        }
 
-            <div style="display:flex;align-items:center;gap:12px">
-              <div class="cart-item-price">$${formatPrice(item.totalPrice)}</div>
-              <button
-                onclick="removeFromCart(${index})"
-                style="background:none;border:none;cursor:pointer;font-size:16px;color:var(--text-light)"
-              >
-                🗑️
-              </button>
+        badge.style.display = "flex";
+        badge.textContent = totalQty;
+        checkoutPanel.style.display = "block";
+
+        const subtotal = cart.reduce((s, i) => s + i.totalPrice, 0);
+        const tax = Math.round(subtotal * 0.0952);
+        const grand = subtotal + tax;
+
+        content.innerHTML = `
+          ${cart
+            .map((item, idx) => {
+              const comboMods = item.modifiers.filter(
+                (m) =>
+                  m.group_key === "combo" ||
+                  m.group === "combo" ||
+                  String(m.group_id || "").includes("_COMBO"),
+              );
+
+              const otherMods = item.modifiers.filter(
+                (m) =>
+                  !(
+                    m.group_key === "combo" ||
+                    m.group === "combo" ||
+                    String(m.group_id || "").includes("_COMBO")
+                  ),
+              );
+
+              return `
+                <div class="cart-item">
+                  <div class="cart-item-info">
+                    <h4>${item.qty}x ${esc(item.name)}</h4>
+
+                    ${
+                      otherMods.length
+                        ? `
+                          <div class="cart-mods">
+                            ${otherMods
+                              .map(
+                                (m) =>
+                                  `<span class="cart-mod-tag">${esc(m.label || m.mod_name)}${modPriceLabel(m)}</span>`,
+                              )
+                              .join(" ")}
+                          </div>
+                        `
+                        : ""
+                    }
+
+                    ${
+                      comboMods.length
+                        ? `
+                          <div class="cart-combo">
+                            🍟 COMBO: ${comboMods
+                              .map(
+                                (m) =>
+                                  `${esc(String(m.label || m.mod_name || "").replace("Add ", ""))}${modPriceLabel(m)}`,
+                              )
+                              .join(" + ")}
+                          </div>
+                        `
+                        : ""
+                    }
+
+                    <div style="font-size:11px;color:var(--text-light);margin-top:4px;">
+                      Unit: $${formatPrice(item.unitPrice)} × ${item.qty}
+                    </div>
+                  </div>
+
+                  <div style="display:flex;align-items:center;gap:12px">
+                    <div class="cart-item-price">$${formatPrice(item.totalPrice)}</div>
+                    <button onclick="removeFromCart(${idx})" style="background:none;border:none;cursor:pointer;font-size:16px;color:var(--text-light)">🗑️</button>
+                  </div>
+                </div>
+              `;
+            })
+            .join("")}
+
+          <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">
+            <label style="display:block;font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px;">Special Instructions</label>
+            <textarea
+              id="cartNotes"
+              style="width:100%;padding:8px 10px;border:1.5px solid var(--input-border);border-radius:var(--radius-sm);font-size:13px;font-family:inherit;min-height:60px;resize:vertical;"
+              placeholder="Allergies, dietary needs, extra requests..."
+            ></textarea>
+          </div>
+
+          <div class="cart-totals">
+            <div class="total-row">
+              <span>Subtotal</span>
+              <span>$${formatPrice(subtotal)}</span>
+            </div>
+            <div class="total-row tax">
+              <span>Tax (est. 9.52%)</span>
+              <span>$${formatPrice(tax)}</span>
+            </div>
+            <div class="total-row grand">
+              <span>Total</span>
+              <span>$${formatPrice(grand)}</span>
             </div>
           </div>
+
+          <div style="margin-top:12px;">
+            <button onclick="submitOrder()" class="submit-btn" id="cartCheckoutBtn" style="width:100%;">
+              💳 Checkout
+            </button>
+          </div>
         `;
-      })
-      .join("")}
+      }
 
-    <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">
-      <label style="display:block;font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px;">
-        Special Instructions
-      </label>
-      <textarea
-        id="cartNotes"
-        name="special_instructions"
-        style="width:100%;padding:8px 10px;border:1.5px solid var(--input-border);border-radius:var(--radius-sm);font-size:13px;font-family:inherit;min-height:60px;resize:vertical;"
-        placeholder="Allergies, dietary needs, extra requests..."
-      ></textarea>
-    </div>
-
-    <div class="cart-totals">
-      <div class="total-row">
-        <span>Subtotal</span>
-        <span>$${formatPrice(subtotal)}</span>
-      </div>
-      <div class="total-row tax">
-        <span>Tax (est. 9.52%)</span>
-        <span>$${formatPrice(tax)}</span>
-      </div>
-      <div class="total-row grand">
-        <span>Total</span>
-        <span>$${formatPrice(grand)}</span>
-      </div>
-    </div>
-
-    <div style="margin-top:12px;">
-      <button onclick="submitOrder()" class="submit-btn" id="cartCheckoutBtn" style="width:100%;">
-        💳 Checkout
-      </button>
-    </div>
-  `;
-}
-
-function scrollToCart() {
+      function scrollToCart() {
   document
     .getElementById("cartPanel")
     ?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -938,154 +928,167 @@ async function submitOrder() {
 }
 
 // ===================== CONFIRMATION =====================
-function showConfirmation(message, paymentLink) {
-  const main = document.querySelector(".main");
-  const hero = document.querySelector(".hero");
+function showConfirmation(message, squareLink) {
+        document.querySelector(".main").style.display = "none";
+        document.querySelector(".hero").style.display = "none";
 
-  if (main) main.style.display = "none";
-  if (hero) hero.style.display = "none";
+        const existing = document.getElementById("confirmationPage");
+        if (existing) existing.remove();
 
-  const existing = document.getElementById("confirmationPage");
-  if (existing) existing.remove();
+        const esc = (value) =>
+          String(value ?? "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
 
-  const subtotal = cart.reduce((sum, item) => sum + item.totalPrice, 0);
-  const tax = Math.round(subtotal * TAX_RATE);
-  const grand = subtotal + tax;
+        const modPriceLabel = (m) => {
+          const price = Number(m.price_delta_cents ?? m.price ?? m.price_cents ?? 0);
+          return price > 0 ? ` (+$${formatPrice(price)})` : "";
+        };
 
-  const orderItemsHtml = cart
-    .map((item) => {
-      const comboMods = item.modifiers.filter(
-        (m) =>
-          m.group_key === "combo" ||
-          m.group === "combo" ||
-          String(m.group_id || "").includes("_COMBO") ||
-          String(m.mod_id || "").includes("COMBO"),
-      );
+        const subtotal = cart.reduce((s, i) => s + i.totalPrice, 0);
+        const tax = Math.round(subtotal * 0.0952);
+        const grand = subtotal + tax;
 
-      const otherMods = item.modifiers.filter(
-        (m) =>
-          !(
-            m.group_key === "combo" ||
-            m.group === "combo" ||
-            String(m.group_id || "").includes("_COMBO") ||
-            String(m.mod_id || "").includes("COMBO")
-          ),
-      );
+        const form = document.getElementById("checkoutForm");
+        const customerName =
+          form?.querySelector('input[name="name"]')?.value || "";
 
-      const modPriceLabel = (m) => {
-        const price = Number(m.price_delta_cents ?? m.price ?? 0);
-        return price > 0 ? ` (+$${formatPrice(price)})` : "";
-      };
+        const orderItemsHtml = cart
+          .map((item) => {
+            const comboMods = item.modifiers.filter(
+              (m) =>
+                m.group_key === "combo" ||
+                m.group === "combo" ||
+                String(m.group_id || "").includes("_COMBO"),
+            );
 
-      return `
-        <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #eee;">
-          <div style="text-align:left;">
-            <div style="font-weight:600;font-size:14px;">${item.qty}× ${escapeHtml(item.name)}</div>
+            const otherMods = item.modifiers.filter(
+              (m) =>
+                !(
+                  m.group_key === "combo" ||
+                  m.group === "combo" ||
+                  String(m.group_id || "").includes("_COMBO")
+                ),
+            );
 
-            ${
-              item.variant_name
-                ? `<div style="color:#6B7280;font-size:12px;margin-top:2px;">${escapeHtml(item.variant_name)}</div>`
-                : ""
-            }
+            return `
+              <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #eee;">
+                <div style="text-align:left;">
+                  <div style="font-weight:600;font-size:14px;">${item.qty}× ${esc(item.name)}</div>
 
-            ${
-              comboMods.length
-                ? `<div style="color:#AF3D4B;font-size:12px;margin-top:2px;">
-                    🍟 COMBO: ${comboMods
-                      .map((m) =>
-                        `${escapeHtml(String(m.label || m.mod_name || "").replace("Add ", ""))}${modPriceLabel(m)}`,
-                      )
-                      .join(" + ")}
-                  </div>`
-                : ""
-            }
+                  ${
+                    comboMods.length
+                      ? `<div style="color:#AF3D4B;font-size:12px;margin-top:2px;">
+                          🍟 COMBO: ${comboMods
+                            .map(
+                              (m) =>
+                                `${esc(String(m.label || m.mod_name || "").replace("Add ", ""))}${modPriceLabel(m)}`,
+                            )
+                            .join(" + ")}
+                        </div>`
+                      : ""
+                  }
 
-            ${
-              otherMods.length
-                ? `<div style="color:#6B7280;font-size:12px;margin-top:2px;">
-                    ${otherMods
-                      .map((m) =>
-                        `${escapeHtml(m.label || m.mod_name)}${modPriceLabel(m)}`,
-                      )
-                      .join(" • ")}
-                  </div>`
-                : ""
-            }
+                  ${
+                    otherMods.length
+                      ? `<div style="color:#6B7280;font-size:12px;margin-top:2px;">
+                          ${otherMods
+                            .map((m) => `${esc(m.label || m.mod_name)}${modPriceLabel(m)}`)
+                            .join(" • ")}
+                        </div>`
+                      : ""
+                  }
 
-            <div style="font-size:11px;color:#9CA3AF;margin-top:3px;">
-              Unit: $${formatPrice(item.unitPrice)} × ${item.qty}
+                  <div style="font-size:11px;color:#9CA3AF;margin-top:3px;">
+                    Unit: $${formatPrice(item.unitPrice)} × ${item.qty}
+                  </div>
+                </div>
+
+                <span style="font-weight:700;color:#AF3D4B;font-size:14px;white-space:nowrap;">
+                  $${formatPrice(item.totalPrice)}
+                </span>
+              </div>
+            `;
+          })
+          .join("");
+
+        const confirmation = document.createElement("div");
+        confirmation.id = "confirmationPage";
+        confirmation.innerHTML = `
+          <div style="max-width:520px;margin:40px auto;padding:24px;background:#fff;border-radius:14px;box-shadow:0 4px 24px rgba(17,24,39,0.08);">
+            <div style="background:linear-gradient(135deg, #590B3F 0%, #7a1a55 50%, #754681 100%);color:white;padding:32px 24px;border-radius:14px 14px 0 0;text-align:center;margin:-24px -24px 24px -24px;">
+              <div style="font-size:56px;margin-bottom:12px;">🎉</div>
+              <h2 style="font-size:28px;font-weight:800;margin:0 0 8px 0;">We Got You!</h2>
+              <p style="font-size:16px;opacity:0.9;margin:0;">We've received your order.</p>
+            </div>
+
+            <div style="text-align:center;margin-bottom:20px;">
+              <div style="display:inline-block;background:#f5e6d0;color:#590B3F;padding:10px 18px;border-radius:8px;font-weight:700;font-size:14px;">
+                📋 Order for ${esc(customerName || "You")}
+              </div>
+            </div>
+
+            <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #eee;">
+              <span style="color:#6B7280;font-size:14px;">Pickup Time</span>
+              <span style="font-weight:600;font-size:14px;">25 - 30 mins</span>
+            </div>
+
+            <h3 style="font-size:16px;font-weight:700;color:#590B3F;margin:20px 0 12px 0;">Your Order</h3>
+            ${orderItemsHtml}
+
+            <div style="margin-top:16px;padding-top:12px;border-top:2px solid #eee;">
+              <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:14px;">
+                <span>Subtotal</span>
+                <span>$${formatPrice(subtotal)}</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:14px;color:#6B7280;">
+                <span>Tax (9.52%)</span>
+                <span>$${formatPrice(tax)}</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;padding:8px 0;margin-top:8px;border-top:1px solid #eee;font-weight:800;font-size:18px;color:#590B3F;">
+                <span>Total</span>
+                <span>$${formatPrice(grand)}</span>
+              </div>
+            </div>
+
+            <div style="text-align:center;margin-top:24px;">
+              <p style="font-size:14px;color:#374151;margin-bottom:18px;line-height:1.6;font-weight:600;">
+                We got you! Click the payment link below to complete your secure payment.
+                Once payment is complete, we will begin preparing your order.
+              </p>
+
+              ${
+                squareLink
+                  ? `" target="_blank" style="display:inline-block;background:#AF3D4B;color:#fff;padding:16px 40px;border-radius:50px;font-weight:700;font-size:16px;text-decoration:none;transition:all 0.2s;">💳 Complete Payment</a>`
+                  : ""
+              }
+
+              <p style="font-size:12px;color:#6B7280;margin-top:16px;line-height:1.5;">
+                Payment links expire at 2:00 AM CT. Didn't receive the email? Check spam or call us.
+              </p>
+
+              <p style="font-size:12px;color:#9CA3AF;">
+                Questions? Call us at
+                tel:${BRAND.phone.replace(/[^0-9]/g, }" style="color:#590B3F;text-decoration:none;font-weight:600;">${esc(BRAND.phone)}</a>.
+              </p>
             </div>
           </div>
+        `;
 
-          <span style="font-weight:700;color:#AF3D4B;font-size:14px;white-space:nowrap;">
-            $${formatPrice(item.totalPrice)}
-          </span>
-        </div>
-      `;
-    })
-    .join("");
-
-  const safePaymentLink = paymentLink ? escapeHtml(paymentLink) : "";
-
-  const confirmation = document.createElement("div");
-  confirmation.id = "confirmationPage";
-
-  confirmation.innerHTML = `
-    <div style="max-width:520px;margin:40px auto;padding:24px;background:#fff;border-radius:14px;box-shadow:0 4px 24px rgba(17,24,39,0.08);">
-      <div style="background:linear-gradient(135deg, #590B3F 0%, #7a1a55 50%, #754681 100%);color:white;padding:32px 24px;border-radius:14px 14px 0 0;text-align:center;margin:-24px -24px 24px -24px;">
-        <div style="font-size:56px;margin-bottom:12px;">🎉</div>
-        <h2 style="font-size:28px;font-weight:800;margin:0 0 8px 0;">We Got You!</h2>
-        <p style="font-size:16px;opacity:0.9;margin:0;">We've received your order.</p>
-      </div>
-
-      <h3 style="font-size:16px;font-weight:700;color:#590B3F;margin:20px 0 12px 0;">Your Order</h3>
-      ${orderItemsHtml}
-
-      <div style="margin-top:16px;padding-top:12px;border-top:2px solid #eee;">
-        <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:14px;">
-          <span>Subtotal</span>
-          <span>$${formatPrice(subtotal)}</span>
-        </div>
-        <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:14px;color:#6B7280;">
-          <span>Tax (est. 9.52%)</span>
-          <span>$${formatPrice(tax)}</span>
-        </div>
-        <div style="display:flex;justify-content:space-between;padding:8px 0;margin-top:8px;border-top:1px solid #eee;font-weight:800;font-size:18px;color:#590B3F;">
-          <span>Total</span>
-          <span>$${formatPrice(grand)}</span>
-        </div>
-      </div>
-
-      <div style="text-align:center;margin-top:24px;">
-        ${
-          safePaymentLink
-            ? `${safePaymentLink}💳 Complete Payment</a>`
-            : ""
+        const footer = document.getElementById("pageFooter");
+        if (footer) {
+          document.body.insertBefore(confirmation, footer);
+        } else {
+          document.body.appendChild(confirmation);
         }
 
-        <p style="font-size:14px;color:#374151;margin-top:20px;line-height:1.6;font-weight:600;">
-          ${escapeHtml(message)}
-        </p>
+        window.scrollTo(0, 0);
+      }
 
-        <p style="font-size:12px;color:#6B7280;margin-top:12px;line-height:1.5;">
-          Payment links expire at 2:00 AM CT. Didn't receive the email? Check spam or call us.
-        </p>
-      </div>
-    </div>
-  `;
-
-  const footer = document.getElementById("pageFooter");
-
-  if (footer) {
-    document.body.insertBefore(confirmation, footer);
-  } else {
-    document.body.appendChild(confirmation);
-  }
-
-  window.scrollTo(0, 0);
-}
-
-// ===================== ALERTS =====================
+      // ===================== ALERTS =====================
 function showAlert(type, msg) {
   const el = document.getElementById(
     `alert${type.charAt(0).toUpperCase() + type.slice(1)}`,
