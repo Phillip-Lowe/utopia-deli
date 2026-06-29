@@ -1025,6 +1025,8 @@ function showConfirmation(message, paymentLink) {
     })
     .join("");
 
+  const safePaymentLink = paymentLink ? escapeHtml(paymentLink) : "";
+
   const confirmation = document.createElement("div");
   confirmation.id = "confirmationPage";
 
@@ -1056,8 +1058,8 @@ function showConfirmation(message, paymentLink) {
 
       <div style="text-align:center;margin-top:24px;">
         ${
-          paymentLink
-            ? `" target="_blank" style="display:inline-block;background:#AF3D4B;color:#fff;padding:16px 40px;border-radius:50px;font-weight:700;font-size:16px;text-decoration:none;">💳 Complete Payment</a>`
+          safePaymentLink
+            ? `${safePaymentLink}💳 Complete Payment</a>`
             : ""
         }
 
