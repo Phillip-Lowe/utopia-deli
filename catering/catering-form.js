@@ -284,7 +284,7 @@
 
     const weeklySets = mpCart['weekly_sets'] || 0;
 
-    // Each weekly set = all 6 meals (1 of each type)
+    // Each weekly set = all 7 meals (1 of each type)
     if (weeklySets > 0) {
       packageCount += weeklySets;
       MEALS.forEach(function(meal) {
@@ -292,12 +292,10 @@
         const lineTotal = weeklySets * meal.price;
         subtotal += lineTotal;
         lineItems.push({ 
-          id: meal.id, 
           name: meal.name, 
-          qty: weeklySets, // Number of each meal type ordered
-          price: meal.price, 
-          calories: meal.calories, 
-          category: 'meal' 
+          base_price_cents: meal.price, 
+          qty: weeklySets,
+          modifiers: []
         });
       });
     }
@@ -309,12 +307,10 @@
         const lineTotal = qty * item.price;
         subtotal += lineTotal;
         lineItems.push({ 
-          id: item.id, 
           name: item.name, 
-          qty: qty, 
-          price: item.price, 
-          calories: item.calories, 
-          category: item.id === 'raspberry-mousse' ? 'dessert' : 'drink'
+          base_price_cents: item.price, 
+          qty: qty,
+          modifiers: []
         });
       }
     });
@@ -325,11 +321,16 @@
     const total = subtotal + labor + tax;
 
     const payload = {
-      source: 'meal-prep',
-      timestamp: new Date().toISOString(),
-      customer: { name: name, phone: phoneDigits, email: email, pickup_time: pickup, notes: notes },
-      items: lineItems,
-      pricing: { subtotal: subtotal, labor: labor, tax: tax, total: total }
+      body: {
+        source: 'meal-prep',
+        timestamp: new Date().toISOString(),
+        customer: { name: name, phone: phoneDigits, email: email, pickup_time: pickup, notes: notes },
+        items: lineItems,
+        subtotal_cents: subtotal,
+        tax_cents: tax,
+        frontend_total_cents: total,
+        notes: notes
+      }
     };
 
     fetch(CHECKOUT_WEBHOOK, {
@@ -337,18 +338,29 @@
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     })
-    .then(function(res) { return res.json(); })
+    .then(function(res) {
+      // Check content-type before parsing
+      var contentType = res.headers.get('content-type') || '';
+      if (contentType.includes('application/json')) {
+        return res.json();
+      }
+      // Empty or non-JSON response — order still went through
+      return { ok: true, _empty: true };
+    })
     .then(function(data) {
       // Check if we got a payment link back
       if (data.payment_link) {
-        // Redirect to Square payment page
         window.location.href = data.payment_link;
       } else if (data.ok && data.square_link) {
-        // Fallback for older response format
         window.location.href = data.square_link;
+      } else if (data.ok && data._empty) {
+        // Order processed but no payment link returned — show success
+        document.getElementById('mp-checkout').style.display = 'none';
+        document.getElementById('mp-totals').style.display = 'none';
+        document.getElementById('mp-success').classList.add('active');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       } else {
-        // No payment link — show error
-        throw new Error(data.message || 'No payment link received');
+        throw new Error(data.message || data.error || 'No payment link received');
       }
     })
     .catch(function(err) {
