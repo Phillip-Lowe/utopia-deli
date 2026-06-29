@@ -1072,7 +1072,7 @@ function showConfirmation(message, squareLink) {
 
               <p style="font-size:12px;color:#9CA3AF;">
                 Questions? Call us at
-                tel:${BRAND.phone.replace(/[^0-9]/g, }" style="color:#590B3F;text-decoration:none;font-weight:600;">${esc(BRAND.phone)}</a>.
+                <a href="tel:${BRAND.phone.replace(/[^0-9]/g, "")}" style="color:#590B3F;text-decoration:none;font-weight:600;">${esc(BRAND.phone)}</a>.
               </p>
             </div>
           </div>
