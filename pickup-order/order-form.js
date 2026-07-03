@@ -849,28 +849,31 @@ async function submitOrder() {
   const total = subtotal + tax;
 
   const payload = {
-    body: {
-      source: "pickup-order",
-      customer: {
-        name: customerName,
-        email,
-        phone,
-      },
-      items: cart.map((cartItem) => ({
-        name: cartItem.name,
-        base_price_cents: cartItem.price,
-        qty: cartItem.qty,
-        modifiers: cartItem.modifiers.map((modifier) => ({
-          label: modifier.label || modifier.mod_name || "Unknown",
-          price_cents: Number(modifier.price_delta_cents || modifier.price || 0),
-        })),
-      })),
-      subtotal_cents: subtotal,
-      tax_cents: tax,
-      frontend_total_cents: total,
-      notes: specialInstructions || "",
-      pickup_time: pickupTime || "25-30 mins",
+    source: "pickup-order",
+    customer: {
+      name: customerName,
+      email,
+      phone,
     },
+    items: cart.map((cartItem) => ({
+      item_id: cartItem.item_id,
+      variant_id: cartItem.variant_id || null,
+      name: cartItem.name,
+      qty: cartItem.qty,
+      base_price_cents: cartItem.price,
+      modifiers: cartItem.modifiers.map((modifier) => ({
+        mod_id: modifier.mod_id,
+        code: modifier.code,
+        group_id: modifier.group_id,
+        label: modifier.label || modifier.mod_name || "Unknown",
+        price_cents: Number(modifier.price_delta_cents || modifier.price || 0),
+      })),
+    })),
+    subtotal_cents: subtotal,
+    tax_cents: tax,
+    frontend_total_cents: total,
+    notes: specialInstructions || "",
+    pickup_time: pickupTime || "25-30 mins",
   };
 
   console.log("Canonical webhook payload:", payload);
