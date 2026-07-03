@@ -6,12 +6,25 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
     />
-
     <title id="pageTitle">Order Online</title>
 
-    ../images/logo.png
+    <link
+      rel="icon"
+      type="image/png"
+      href="../images/logo.png"
+      id="pageFavicon"
+    />
 
-    https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap
+    <link
+      href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Core config first -->
+<script src="config-v2.js"></script>
+
+<!-- Menu data second -->
+<script src="menu-data.js?v=10"></script>
 
     <style>
       :root {
@@ -57,6 +70,7 @@
         -webkit-font-smoothing: antialiased;
       }
 
+      /* ===== HEADER ===== */
       .header {
         background: linear-gradient(
           135deg,
@@ -144,6 +158,7 @@
         justify-content: center;
       }
 
+      /* ===== HERO ===== */
       .hero {
         background: linear-gradient(
           135deg,
@@ -226,12 +241,12 @@
         100% {
           opacity: 1;
         }
-
         50% {
           opacity: 0.5;
         }
       }
 
+      /* ===== MAIN LAYOUT ===== */
       .main {
         max-width: 1200px;
         margin: 0 auto;
@@ -242,6 +257,7 @@
         align-items: start;
       }
 
+      /* ===== MENU SECTIONS ===== */
       .section-title {
         font-size: 24px;
         font-weight: 700;
@@ -257,7 +273,6 @@
         display: flex;
         align-items: center;
       }
-
       .section-title .icon img {
         width: 28px;
         height: 28px;
@@ -356,6 +371,7 @@
         margin-bottom: 16px;
       }
 
+      /* ===== MODIFIERS ===== */
       .modifiers {
         display: none;
         margin-top: 16px;
@@ -429,15 +445,7 @@
         font-weight: 600;
       }
 
-      .selected-summary {
-        margin-top: 12px;
-        padding: 10px;
-        border: 1px dashed var(--border);
-        border-radius: var(--radius-sm);
-        background: #fff;
-        font-size: 12px;
-      }
-
+      /* ===== ADD TO ORDER ===== */
       .item-actions {
         display: none;
         margin-top: 16px;
@@ -508,6 +516,7 @@
         transform: translateY(-1px);
       }
 
+      /* ===== SIDEBAR ===== */
       .sidebar-left,
       .sidebar-right {
         position: sticky;
@@ -629,6 +638,7 @@
         border-top: 1px solid var(--border);
       }
 
+      /* ===== CHECKOUT FORM ===== */
       .form-group {
         margin-bottom: 16px;
       }
@@ -702,14 +712,8 @@
 
       .submit-btn:disabled {
         opacity: 0.6;
-        cursor: not-allowed;
-        transform: none;
-      }
-
-      .alert {
-        border-radius: var(--radius-sm);
+        -radius: var(--radius-sm);
         margin-bottom: 20px;
-        padding: 12px 14px;
         font-size: 14px;
         display: none;
       }
@@ -736,6 +740,7 @@
         color: #1e40af;
       }
 
+      /* ===== LOADING ===== */
       .spinner {
         width: 18px;
         height: 18px;
@@ -752,6 +757,7 @@
         }
       }
 
+      /* ===== FOOTER ===== */
       .footer {
         text-align: center;
         padding: 40px 20px;
@@ -761,6 +767,7 @@
         margin-top: 40px;
       }
 
+      /* ===== RESPONSIVE ===== */
       @media (max-width: 768px) {
         .main {
           grid-template-columns: 1fr;
@@ -775,11 +782,16 @@
         .hero h2 {
           font-size: 28px;
         }
+
+        .menu-item {
+          padding: 18px;
+        }
       }
     </style>
   </head>
 
   <body>
+    <!-- HEADER -->
     <header class="header">
       <div class="header-inner">
         <div class="brand">
@@ -793,7 +805,12 @@
               color: inherit;
             "
           >
-            ../images/logo.png
+            <img
+              src="../images/logo.png"
+              id="brandLogo"
+              alt="The Utopia Deli"
+              style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; display: block;"
+            />
           </a>
 
           <div class="brand-text">
@@ -802,15 +819,18 @@
           </div>
         </div>
 
-        <button class="cart-btn" onclick="scrollToCart()">
-          🛒 Cart
-          <span class="cart-badge" id="cartBadge" style="display: none">
-            0
-          </span>
-        </button>
+        <div style="display: flex; gap: 10px; align-items: center">
+          <button class="cart-btn" onclick="scrollToCart()">
+            🛒 Cart
+            <span class="cart-badge" id="cartBadge" style="display: none">
+              0
+            </span>
+          </button>
+        </div>
       </div>
     </header>
 
+    <!-- HERO -->
     <section class="hero">
       <h2>Order <span class="gold">Online</span></h2>
       <p>
@@ -824,7 +844,9 @@
       </div>
     </section>
 
+    <!-- MAIN -->
     <main class="main">
+      <!-- LEFT SIDEBAR / CONTACT -->
       <aside class="sidebar-left">
         <div class="checkout-panel" id="checkoutPanel" style="display: block">
           <div class="panel-title">📋 Your Info</div>
@@ -880,49 +902,55 @@
         </div>
       </aside>
 
+      <!-- CENTER MENU -->
       <div class="menu-side">
+        <!-- ALERTS -->
         <div class="alert alert-success" id="alertSuccess"></div>
         <div class="alert alert-error" id="alertError"></div>
         <div class="alert alert-info" id="alertInfo"></div>
 
         <div class="menu-section-card">
-          <h3 class="section-title">
-            <span class="icon">
-              ../images/icon-sandwich.svg
-            </span>
-            Sandwiches &amp; Subs
-          </h3>
-          <p class="section-sub">
-            Choose your favorites from our selection of sandwiches and subs.
-          </p>
-          <div class="menu-grid" id="sandwichGrid"></div>
+        <!-- SANDWICHES -->
+        <h3 class="section-title">
+          <span class="icon">
+            <img src="../images/icon-sandwich.svg" alt="" />
+          </span>
+          Sandwiches &amp; Subs
+        </h3>
+        <p class="section-sub">
+          Choose your favorites from our selection of sandwiches and subs.
+        </p>
+        <div class="menu-grid" id="sandwichGrid"></div>
         </div>
 
         <div class="menu-section-card">
-          <h3 class="section-title">
-            <span class="icon">
-              ../images/icon-specialties.svg
-            </span>
-            House Specialties
-          </h3>
-          <p class="section-sub">
-            Unique creations you won't find anywhere else.
-          </p>
-          <div class="menu-grid" id="specialtyGrid"></div>
+        <!-- SPECIALTIES -->
+        <h3 class="section-title">
+          <span class="icon">
+            <img src="../images/icon-specialties.svg" alt="" />
+          </span>
+          House Specialties
+        </h3>
+        <p class="section-sub">
+          Unique creations you won't find anywhere else.
+        </p>
+        <div class="menu-grid" id="specialtyGrid"></div>
         </div>
 
         <div class="menu-section-card">
-          <h3 class="section-title">
-            <span class="icon">
-              ../images/icon-sides.svg
-            </span>
-            Sides &amp; Extras
-          </h3>
-          <p class="section-sub">Complete your meal with these add-ons.</p>
-          <div class="menu-grid" id="sidesGrid"></div>
+        <!-- SIDES & EXTRAS -->
+        <h3 class="section-title">
+          <span class="icon">
+            <img src="../images/icon-sides.svg" alt="" />
+          </span>
+          Sides &amp; Extras
+        </h3>
+        <p class="section-sub">Complete your meal with these add-ons.</p>
+        <div class="menu-grid" id="sidesGrid"></div>
         </div>
       </div>
 
+      <!-- RIGHT SIDEBAR / CART -->
       <aside class="sidebar-right">
         <div class="cart-panel" id="cartPanel">
           <div class="panel-title">🛒 Your Order</div>
@@ -937,13 +965,14 @@
       </aside>
     </main>
 
+    <!-- FOOTER -->
     <footer class="footer" id="pageFooter">
       <p>
         <a
           href="https://theutopiadeli.com"
           style="text-decoration: none; color: inherit"
         >
-          ../images/logo.png
+          <img src="../images/logo.png" alt="The Utopia Deli" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; display: block; margin: 0 auto 8px;" />
         </a>
         <span id="footerBrand">The Utopia Deli · It's just good food</span>
       </p>
@@ -957,7 +986,9 @@
           801 S. Chester, Little Rock, AR 72201
         </a>
         ·
-        tel:+15015515944 text-decoration: underline"
+        <a
+          href="tel:+15015515944"
+          style="color: var(--ud-secondary); text-decoration: underline"
         >
           (501) 551-5944
         </a>
@@ -984,9 +1015,6 @@
         </a>
       </p>
     </footer>
-
-    <script src="config-v2.js"></script>
-    <script src="menu-data.js?v=10"></script>
 
     <script>
       function applyBrand() {
@@ -1025,43 +1053,24 @@
         }
 
         const footerContact = document.getElementById("footerContact");
-        if (footerContact) {
+        if (footerContact && BRAND.streetAddress) {
           const parts = [];
 
           if (BRAND.streetAddress) {
-            const mapUrl =
-              "https://maps.google.com/?q=" +
-              encodeURIComponent(BRAND.streetAddress)
-                .replace(/%20/g, "+")
-                .replace(/%2C/g, ",");
-
-            parts.push(
-              `${mapUrl}${BRAND.streetAddress}</a>`,
-            );
+            parts.push(`<a href="https://maps.google.com/?q=${encodeURIComponent(BRAND.streetAddress).replace(/%20/g, "+").replace(/%2C/g, ",")}" target="_blank" style="color: var(--ud-secondary); text-decoration: underline">${BRAND.streetAddress}</a>`);
           }
 
           if (BRAND.phone) {
-            const phoneDigits = BRAND.phone.replace(/\D/g, "");
-            parts.push(
-              `tel:+1${phoneDigits}${BRAND.phone}</a>`,
-            );
+            parts.push(`<a href="tel:+1${BRAND.phone.replace(/\D/g, "")}" style="color: var(--ud-secondary); text-decoration: underline">${BRAND.phone}</a>`);
           }
 
           if (BRAND.email) {
-            parts.push(
-              `mailto:${BRAND.email}${BRAND.email}</a>`,
-            );
+            parts.push(`<a href="mailto:${BRAND.email}" style="color: var(--ud-secondary); text-decoration: underline">${BRAND.email}</a>`);
           }
 
-          parts.push(
-            `<a href="terms.html" style="color: var(--ud-secondary); text-decoration: underline">Terms</a>`,
-          );
-
-          parts.push(
-            `<a href="privacy.html" style="color: var(--ud-secondary); text-decoration: underline">Privacy</a>`,
-          );
-
-          footerContact.innerHTML = parts.join(" · ");
+          if (parts.length) {
+            footerContact.innerHTML = parts.join(" · ");
+          }
         }
 
         if (BRAND.colors && BRAND.colors.primary) {
