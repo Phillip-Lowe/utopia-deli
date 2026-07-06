@@ -7,6 +7,8 @@
 // - Modifier group_id = DB group_id
 // - Prices are cents
 // - Combo fries are always plain fries
+// - FRIES style is handled as a REQUIRED modifier
+// - JUICE flavor and size are handled as REQUIRED modifiers
 
 (function () {
   function mod(code, group_id, group_type, label, price) {
@@ -18,6 +20,7 @@
       label,
       mod_name: label,
       price,
+      price_cents: price,
       price_delta_cents: price,
     };
   }
@@ -29,6 +32,7 @@
         item_id: "COWBOY",
         name: "cowboy chikn sandwich",
         price: 1300,
+        base_price_cents: 1300,
         desc: "Grilled Cowboy Chik’n, Lettuce, Tomato, Ranch, Bac'n.",
         photo: "../images/cowboy_chicken.webp",
         modifiers: {
@@ -97,6 +101,7 @@
         item_id: "CLUB",
         name: "chikn club sub",
         price: 1500,
+        base_price_cents: 1500,
         desc: "Grilled Chik’n Bac’n Cheese on a bed of Lettuce and Tomatoes.",
         photo: "../images/chicken_club.webp",
         modifiers: {
@@ -165,6 +170,7 @@
         item_id: "FRIED",
         name: "chikn fried chikn sub",
         price: 1300,
+        base_price_cents: 1300,
         desc: "Crispy Fried Chik'n on a hoagie with lettuce, tomato, ranch.",
         photo: "../images/chicken_fried_chikn_sub.png",
         modifiers: {
@@ -246,7 +252,8 @@
         item_id: "PHILLY",
         name: "philly sub",
         price: 1300,
-        desc: "Stek OR Chik’n with sautéed onions & bell peppers.",
+        base_price_cents: 1300,
+        desc: "Stek OR Chik’n with sautéed onions &amp; bell peppers.",
         photo: "../images/steak_philly.jpg",
         modifiers: {
           protein: [
@@ -297,6 +304,7 @@
         item_id: "POPPERS",
         name: "chikn poppers",
         price: 1000,
+        base_price_cents: 1000,
         desc: "Crispy chikn dippers or sauced with choice of BBQ, Garlic Parm, Jerk, Buffalo, Lemon Pepper Wet.",
         photo: "../images/chicken_poppers_v3.jpg",
         modifiers: {
@@ -319,6 +327,7 @@
         item_id: "DUMPLING_TACOS",
         name: "korean pork dumpling tacos",
         price: 1000,
+        base_price_cents: 1000,
         desc: "“Pork”, pickled slaw, aioli, and sauce on a dumpling shell. Set of 4 tacos.",
         photo: "../images/korean_pork_dumpling_tacos.jpg",
         modifiers: {
@@ -354,6 +363,7 @@
         item_id: "ROCKTOWN_SLIDERS",
         name: "rocktown bourbon chikn sliders",
         price: 1200,
+        base_price_cents: 1200,
         desc: "Rocktown distillery bourbon-infused chik’n with fresh slaw and aioli on a garlic butter slider bun.",
         photo: "../images/rocktown_bourbon_slider.jpg",
         modifiers: {
@@ -373,6 +383,7 @@
         item_id: "BUFFALO_SLIDERS",
         name: "buffalo chikn sliders",
         price: 1200,
+        base_price_cents: 1200,
         desc: "Buffalo chik’n sliders with fresh slaw and ranch on a garlic butter slider bun.",
         photo: "../images/buffalo_chikn_slider.jpg",
         modifiers: {
@@ -394,6 +405,7 @@
         item_id: "FRIES",
         name: "fries",
         price: 500,
+        base_price_cents: 500,
         desc: "Crinkle-cut fries with a golden, crispy exterior. Choose plain or loaded style.",
         photo: "../images/plain_fries.avif",
         modifiers: {
@@ -450,6 +462,7 @@
         item_id: "JUICE_CP",
         name: "fresh cold-pressed juice",
         price: 500,
+        base_price_cents: 500,
         desc: "Select flavor and size. Current public size is 10 oz plastic bottle.",
         photo: "../images/cold_pressed_juice_v2.jpg",
         modifiers: {
@@ -497,6 +510,7 @@
         item_id: "COOKIES_2",
         name: "two fresh baked chocolate chip cookies",
         price: 400,
+        base_price_cents: 400,
         desc: "2 fresh baked chocolate chip cookies.",
         photo: "../images/cookies_v2.jpg",
       },
@@ -506,6 +520,7 @@
         item_id: "SIDE_SALAD",
         name: "side salad",
         price: 500,
+        base_price_cents: 500,
         desc: "Fresh mixed greens with house vegetables, served with your choice of dressing.",
         photo: "../images/side_salad_v2.png",
       },
@@ -515,6 +530,7 @@
         item_id: "WATER_16OZ",
         name: "16 oz bottled water",
         price: 200,
+        base_price_cents: 200,
         desc: "Crisp, chilled 16 oz bottled water — refreshing and perfect alongside any meal.",
         photo: "../images/bottled_water_v2.png",
       },
@@ -524,9 +540,12 @@
         item_id: "CHIPS_SPIRALS",
         name: "potato chip spirals",
         price: 500,
+        base_price_cents: 500,
         desc: "Crispy potato chip spirals — seasoned and fried to perfection.",
         photo: "../images/spiral_chips.jpg",
       },
     ],
+
+    beverages: [],
   };
 })();

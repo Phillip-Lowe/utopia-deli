@@ -47,18 +47,16 @@
 
   // ===== MEAL PREP DATA =====
   const MEALS = [
-    { id: 'street-corn', name: 'Street Corn Taco Bowl', calories: 470, price: 1200, photo: '', icon: '🌮', desc: 'Cilantro lime rice, chipotle lentil taco crumble, roasted corn, black beans, pickled onions, chipotle crema' },
-    { id: 'nashville-hot', name: 'Nashville Hot Lentil Bowl', calories: 480, price: 1200, photo: '', icon: '🌶️', desc: 'Garlic rice, Nashville hot lentils, roasted broccoli, ranch drizzle' },
-    { id: 'mediterranean', name: 'Mediterranean Harvest Bowl', calories: 500, price: 1200, photo: 'images/meal-mediterranean-harvest.jpg', icon: '🥗', desc: 'Lemon herb quinoa, crispy oregano chickpeas, cucumber tomato salad, hummus, tahini drizzle, pickled red onion' },
-    { id: 'thai-peanut', name: 'Thai Peanut Crunch Bowl', calories: 490, price: 1200, photo: 'images/meal-thai-peanut-crunch.jpg', icon: '🥜', desc: 'Jasmine rice, crispy peanut tofu, sesame cabbage slaw, sweet chili peanut drizzle' },
-    { id: 'cajun-red-beans', name: 'Cajun Red Beans & Dirty Rice Bowl', calories: 460, price: 1200, photo: '', icon: '🍛', desc: 'Dirty rice, Cajun beans, peppers & onions, green onion garnish' },
-    { id: 'bbq-potato', name: 'Loaded BBQ Potato Bowl', calories: 510, price: 1200, photo: '', icon: '🥔', desc: 'Roasted potatoes, BBQ lentil crumble, broccoli, smoked cheeze sauce, green onions' },
-    { id: 'eggplant-parm', name: 'Eggplant Parmesan', calories: 530, price: 1200, photo: 'images/meal-eggplant-parm.jpg', icon: '🍆', desc: 'Parmesan crusted eggplant layered with fragrant homemade marinara sauce, topped with fresh basil' }
+    { id: 'lemon-chickpea-orzo', name: 'Lemon Chickpea Orzo', calories: 480, price: 1200, photo: '', icon: '🍋', desc: 'Tender orzo tossed with roasted chickpeas, wilted spinach, garlic, fresh lemon, herbs, and a light lemon buttery sauce' },
+    { id: 'creamy-mushroom-wild-rice', name: 'Creamy Mushroom Wild Rice', calories: 510, price: 1200, photo: '', icon: '🍄', desc: 'A rich blend of wild rice, sautéed mushrooms, caramelized onions, garlic, and spinach folded into a silky herb cream sauce' },
+    { id: 'mediterranean-pasta-salad', name: 'Mediterranean Pasta Salad', calories: 450, price: 1200, photo: '', icon: '🥗', desc: 'Rotini pasta tossed with crisp cucumbers, juicy tomatoes, red onion, chickpeas, fresh herbs, and a vibrant lemon vinaigrette. Served chilled' },
+    { id: 'buffalo-chickpea-caesar-wrap', name: 'Buffalo Chickpea Caesar Wrap', calories: 530, price: 1200, photo: '', icon: '🌯', desc: 'Crispy buffalo chickpeas layered with crisp romaine, shaved parmesan-style cheeze, crunchy onions, and creamy Caesar dressing, all wrapped in a soft tortilla' },
+    { id: 'baked-veg-lasagna-rollups', name: 'Baked Vegetable Lasagna Roll-Ups', calories: 550, price: 1200, photo: '', icon: '🍝', desc: 'Lasagna noodles rolled around a creamy tofu ricotta with spinach, roasted vegetables, herbs, and marinara, then baked until bubbly and finished with melty vegan mozzarella' },
+    { id: 'bourbon-bbq-lentil-meatloaf', name: 'Bourbon BBQ Lentil Meatloaf', calories: 520, price: 1200, photo: '', icon: '🥃', desc: 'A smoky lentil meatloaf glazed with sweet bourbon-style BBQ sauce and served alongside creamy garlic mashed potatoes and roasted green beans' },
+    { id: 'sweet-sticky-orange-tofu', name: 'Sweet & Sticky Orange Tofu', calories: 490, price: 1200, photo: '', icon: '🍊', desc: 'Crispy tofu tossed in a house-made orange garlic glaze with fresh ginger, citrus zest, and a touch of chili, served with fragrant jasmine rice and charred seasonal vegetables' }
   ];
 
   const DESSERTS = [
-    { id: 'mango-chia', name: 'Mango Chia Seed Pudding', calories: 280, price: 600, photo: 'images/dessert-mango-chia.jpg', icon: '🥭', desc: 'Creamy mango chia pudding made with coconut milk and fresh mango' },
-    { id: 'raspberry-mousse', name: 'Raspberry Dark Chocolate Mousse', calories: 340, price: 600, photo: 'images/dessert-raspberry-mousse.jpg', icon: '🍫', desc: 'Rich dark chocolate mousse topped with fresh raspberries — sugar free' },
     { id: 'apple-pie', name: 'Apple Pie', calories: 310, price: 600, photo: 'images/apple-pie.jpg', icon: '🍎', desc: 'Classic spiced apple pie — sugar free' }
   ];
 
@@ -254,7 +252,7 @@
     const name = document.getElementById('mp-name').value.trim();
     const phone = document.getElementById('mp-phone').value.trim();
     const email = document.getElementById('mp-email').value.trim();
-    const pickup = 'Thursday 12:30 PM - 7:30 PM';// Hardcoded pickup window
+    const pickup = 'Thursday 12:30 PM - 7:30 PM';
     const notes = document.getElementById('mp-notes').value.trim();
 
     if (!name || !phone || !email) {
@@ -286,7 +284,7 @@
 
     const weeklySets = mpCart['weekly_sets'] || 0;
 
-    // Each weekly set = all 6 meals (1 of each type)
+    // Each weekly set = all 7 meals (1 of each type)
     if (weeklySets > 0) {
       packageCount += weeklySets;
       MEALS.forEach(function(meal) {
@@ -294,12 +292,9 @@
         const lineTotal = weeklySets * meal.price;
         subtotal += lineTotal;
         lineItems.push({ 
-          id: meal.id, 
           name: meal.name, 
-          qty: weeklySets, // Number of each meal type ordered
-          price: meal.price, 
-          calories: meal.calories, 
-          category: 'meal' 
+          qty: weeklySets,
+          price: meal.price
         });
       });
     }
@@ -311,12 +306,9 @@
         const lineTotal = qty * item.price;
         subtotal += lineTotal;
         lineItems.push({ 
-          id: item.id, 
           name: item.name, 
-          qty: qty, 
-          price: item.price, 
-          calories: item.calories, 
-          category: item.id === 'raspberry-mousse' ? 'dessert' : 'drink'
+          qty: qty,
+          price: item.price
         });
       }
     });
@@ -332,10 +324,7 @@
         timestamp: new Date().toISOString(),
         customer: { name: name, phone: phoneDigits, email: email, pickup_time: pickup, notes: notes },
         items: lineItems,
-        pricing: { subtotal: subtotal, labor: labor, tax: tax, total: total },
-        subtotal_cents: subtotal,
-        tax_cents: tax,
-        frontend_total_cents: total
+        pricing: { subtotal: subtotal, labor: labor, tax: tax, total: total }
       }
     };
 
@@ -348,14 +337,11 @@
     .then(function(data) {
       // Check if we got a payment link back
       if (data.payment_link) {
-        // Redirect to Square payment page
         window.location.href = data.payment_link;
       } else if (data.ok && data.square_link) {
-        // Fallback for older response format
         window.location.href = data.square_link;
       } else {
-        // No payment link — show error
-        throw new Error(data.message || 'No payment link received');
+        throw new Error(data.message || data.error || 'No payment link received');
       }
     })
     .catch(function(err) {
@@ -643,5 +629,3 @@
   });
 
 })();
-// Cache bust: Fri Jul  3 09:21:11 CDT 2026
-/* Build: 1783090337 */

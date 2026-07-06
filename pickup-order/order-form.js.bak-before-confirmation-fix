@@ -1,4 +1,4 @@
-// ===================== ORACLE / SOL LOCKED: order-form.js v5.6
+// ===================== ORACLE / SOL LOCKED: order-form.js v5.1
 // Utopia Deli canonical frontend order form
 //
 // Contract:
@@ -81,107 +81,6 @@ const GROUP_RULES = {
   BUFFALO_COMBO: { min: 0, max: 1 },
 };
 
-// ===================== GROUP ID RECOVERY MAP =====================
-// Used when menu-data.js still has legacy group keys like:
-// sauce, hold, noranch, addons, combo
-// instead of canonical DB group IDs like COW_SAUCES.
-const GROUP_ID_MAP = {
-  COWBOY: {
-    sauce: "COW_SAUCES",
-    sauces: "COW_SAUCES",
-    hold: "COW_TAKEOFF",
-    takeoff: "COW_TAKEOFF",
-    takeoffs: "COW_TAKEOFF",
-    noranch: "COW_NORANCH",
-    no_ranch: "COW_NORANCH",
-    addons: "COW_ADDONS",
-    addon: "COW_ADDONS",
-    combo: "COW_COMBO",
-  },
-
-  PHILLY: {
-    protein: "PHILLY_PROTEIN",
-    proteins: "PHILLY_PROTEIN",
-    addons: "PHILLY_ADDONS",
-    addon: "PHILLY_ADDONS",
-    combo: "PHILLY_COMBO",
-    hold: "PHILLY_TAKEOFF",
-    takeoff: "PHILLY_TAKEOFF",
-    takeoffs: "PHILLY_TAKEOFF",
-    extras: "PHILLY_EXTRAS",
-    extra: "PHILLY_EXTRAS",
-  },
-
-  CLUB: {
-    hold: "CLUB_TAKEOFF",
-    takeoff: "CLUB_TAKEOFF",
-    takeoffs: "CLUB_TAKEOFF",
-    noranch: "CLUB_NORANCH",
-    no_ranch: "CLUB_NORANCH",
-    combo: "CLUB_COMBO",
-    addons: "CLUB_ADDONS",
-    addon: "CLUB_ADDONS",
-    sauce: "CLUB_SAUCES",
-    sauces: "CLUB_SAUCES",
-  },
-
-  FRIED: {
-    hold: "FRIED_TAKEOFF",
-    takeoff: "FRIED_TAKEOFF",
-    takeoffs: "FRIED_TAKEOFF",
-    noranch: "FRIED_NORANCH",
-    no_ranch: "FRIED_NORANCH",
-    combo: "FRIED_COMBO",
-    addons: "FRIED_ADDONS",
-    addon: "FRIED_ADDONS",
-    sauce: "FRIED_ADDSAUCE",
-    sauces: "FRIED_ADDSAUCE",
-    addsauce: "FRIED_ADDSAUCE",
-  },
-
-  FRIES: {
-    addons: "FRIES_ADDONS",
-    addon: "FRIES_ADDONS",
-    protein: "FRIES_ADDPROTEIN",
-    proteins: "FRIES_ADDPROTEIN",
-    addprotein: "FRIES_ADDPROTEIN",
-  },
-
-  JUICE_CP: {
-    flavor: "JUICE_FLAVOR",
-    flavors: "JUICE_FLAVOR",
-  },
-
-  POP: {
-    sauce: "POP_SAUCE",
-    sauces: "POP_SAUCE",
-    combo: "POP_COMBO",
-  },
-
-  DUMPLING: {
-    hold: "DUMPLING_TAKEOFF",
-    takeoff: "DUMPLING_TAKEOFF",
-    takeoffs: "DUMPLING_TAKEOFF",
-    subs: "DUMPLING_SUBS",
-    sub: "DUMPLING_SUBS",
-    combo: "DUMPLING_COMBO",
-  },
-
-  ROCK: {
-    hold: "ROCK_TAKEOFF",
-    takeoff: "ROCK_TAKEOFF",
-    takeoffs: "ROCK_TAKEOFF",
-    combo: "ROCK_COMBO",
-  },
-
-  BUFFALO: {
-    hold: "BUFFALO_TAKEOFF",
-    takeoff: "BUFFALO_TAKEOFF",
-    takeoffs: "BUFFALO_TAKEOFF",
-    combo: "BUFFALO_COMBO",
-  },
-};
-
 // ===================== HELPERS =====================
 function formatPrice(cents) {
   return ((Number(cents) || 0) / 100).toFixed(2);
@@ -206,42 +105,7 @@ function getAllItems() {
 }
 
 function findItem(id) {
-  return getAllItems().find((item) => {
-    const itemId = item.item_id || item.id;
-    return itemId === id || item.id === id || item.item_id === id;
-  });
-}
-
-function getCanonicalItemId(item) {
-  return item?.item_id || item?.id || null;
-}
-
-function getBasePriceCents(item) {
-  return Number(item?.base_price_cents ?? item?.sell_price_cents ?? item?.price ?? 0) || 0;
-}
-
-function normalizeModifierPrice(modifier) {
-  return Number(
-    modifier?.price_delta_cents ??
-      modifier?.price_cents ??
-      modifier?.price_delta ??
-      modifier?.price ??
-      0,
-  ) || 0;
-}
-
-function resolveGroupId(itemId, groupKey, option) {
-  if (option?.group_id) return option.group_id;
-
-  const cleanItemId = String(itemId || "").trim();
-  const cleanGroupKey = String(groupKey || "").trim();
-  const lowerGroupKey = cleanGroupKey.toLowerCase();
-
-  return (
-    GROUP_ID_MAP[cleanItemId]?.[cleanGroupKey] ||
-    GROUP_ID_MAP[cleanItemId]?.[lowerGroupKey] ||
-    cleanGroupKey
-  );
+  return getAllItems().find((item) => item.id === id || item.item_id === id);
 }
 
 function getGroupRule(groupId, groupType) {
@@ -255,43 +119,17 @@ function readableGroupName(groupKey, firstOption) {
 
   const names = {
     sauce: "Sauce",
-    sauces: "Sauce",
     hold: "Take Off",
-    takeoff: "Take Off",
-    takeoffs: "Take Off",
     noranch: "No Ranch / Sauce Substitute",
-    no_ranch: "No Ranch / Sauce Substitute",
     addons: "Add Ons",
-    addon: "Add Ons",
     combo: "Combo Upgrade",
     protein: "Protein",
-    proteins: "Protein",
     extras: "Extras",
-    extra: "Extras",
     subs: "Substitutions",
-    sub: "Substitutions",
     flavor: "Juice Flavor",
-    flavors: "Juice Flavor",
   };
 
-  return names[groupKey] || String(groupId).replaceAll("_", " ");
-}
-
-function getModifierId(option) {
-  return option?.mod_id || option?.code || option?.id || null;
-}
-
-function getModifierName(option) {
-  return option?.mod_name || option?.label || option?.name || getModifierId(option) || "Unknown";
-}
-
-function isComboModifier(modifier) {
-  return (
-    modifier?.group === "combo" ||
-    modifier?.group_key === "combo" ||
-    String(modifier?.group_id || "").includes("_COMBO") ||
-    String(modifier?.mod_id || modifier?.code || "").includes("_COMBO")
-  );
+  return names[groupKey] || groupId.replaceAll("_", " ");
 }
 
 // ===================== RENDER MENU =====================
@@ -308,24 +146,23 @@ function renderCategory(gridId, items) {
 
   grid.innerHTML = items
     .map((item) => {
-      const itemId = escapeHtml(getCanonicalItemId(item));
+      const itemId = escapeHtml(item.id || item.item_id);
       const name = escapeHtml(item.name);
-      const desc = escapeHtml(item.desc || item.description || "");
-      const photo = item.photo || item.image || "";
-      const price = getBasePriceCents(item);
+      const desc = escapeHtml(item.desc || "");
+      const photo = item.photo || "";
 
       return `
         <div class="menu-item" id="item-${itemId}" onclick="selectItem('${itemId}')">
           ${
             photo
-              ? `" alt="${name}" loading="lazy">`
+              ? `<img class="item-photo" src="${escapeHtml(photo)}" alt="${name}" loading="lazy">`
               : ""
           }
 
           <div class="item-content">
             <div class="item-header">
               <div class="item-name">${name}</div>
-              <div class="item-price">$${formatPrice(price)}</div>
+              <div class="item-price">$${formatPrice(item.price)}</div>
             </div>
 
             <div class="item-desc">${desc}</div>
@@ -356,8 +193,6 @@ function renderCategory(gridId, items) {
 function renderVariants(item) {
   if (!Array.isArray(item.variants) || item.variants.length === 0) return "";
 
-  const itemId = escapeHtml(getCanonicalItemId(item));
-
   return `
     <div class="mod-group variant-group" data-group="variants">
       <div class="mod-group-title">
@@ -368,10 +203,8 @@ function renderVariants(item) {
       <div class="mod-options">
         ${item.variants
           .map((variant) => {
-            const variantId = escapeHtml(variant.variant_id || variant.id);
-            const label = escapeHtml(
-              variant.label || variant.variant_name || variant.name || variantId,
-            );
+            const variantId = escapeHtml(variant.variant_id);
+            const label = escapeHtml(variant.label || variant.variant_name);
             const delta = Number(variant.price_delta_cents || 0);
 
             return `
@@ -379,7 +212,9 @@ function renderVariants(item) {
                 type="button"
                 class="mod-btn variant-btn"
                 data-variant-id="${variantId}"
-                onclick="event.stopPropagation(); toggleVariant('${itemId}', '${variantId}', this)"
+                onclick="event.stopPropagation(); toggleVariant('${escapeHtml(
+                  item.id || item.item_id,
+                )}', '${variantId}', this)"
               >
                 ${label}
                 ${
@@ -399,14 +234,12 @@ function renderVariants(item) {
 function renderModifiers(item) {
   if (!item.modifiers) return "";
 
-  const itemId = getCanonicalItemId(item);
-
   return Object.entries(item.modifiers)
     .map(([groupKey, options]) => {
       if (!Array.isArray(options) || options.length === 0) return "";
 
       const first = options[0];
-      const groupId = resolveGroupId(itemId, groupKey, first);
+      const groupId = first.group_id || groupKey;
       const rule = getGroupRule(groupId, first.group_type);
       const isRequired = rule.min > 0;
       const title = escapeHtml(readableGroupName(groupKey, first));
@@ -422,7 +255,7 @@ function renderModifiers(item) {
             }
             ${
               rule.max < 99
-                ? `<span class="mod-counter" id="counter-${escapeHtml(itemId)}-${escapeHtml(groupKey)}"></span>`
+                ? `<span class="mod-counter" id="counter-${escapeHtml(item.id)}-${escapeHtml(groupKey)}"></span>`
                 : ""
             }
           </div>
@@ -430,17 +263,16 @@ function renderModifiers(item) {
           <div class="mod-options">
             ${options
               .map((opt) => {
-                const modId = escapeHtml(getModifierId(opt));
-                const label = escapeHtml(getModifierName(opt));
-                const price = normalizeModifierPrice(opt);
-                const optGroupId = resolveGroupId(itemId, groupKey, opt);
+                const modId = escapeHtml(opt.mod_id || opt.code);
+                const label = escapeHtml(opt.label || opt.mod_name);
+                const price = Number(opt.price_delta_cents ?? opt.price ?? 0);
 
                 return `
                   <button
                     type="button"
                     class="mod-btn"
                     data-group="${escapeHtml(groupKey)}"
-                    data-group-id="${escapeHtml(optGroupId)}"
+                    data-group-id="${escapeHtml(opt.group_id)}"
                     data-mod-id="${modId}"
                     data-code="${modId}"
                     onclick="event.stopPropagation(); toggleMod('${escapeHtml(groupKey)}', '${modId}', this)"
@@ -465,7 +297,9 @@ function renderModifiers(item) {
 // ===================== INTERACTIONS =====================
 function selectItem(id) {
   if (selectedItem && selectedItem !== id) {
-    document.getElementById(`item-${selectedItem}`)?.classList.remove("selected");
+    document
+      .getElementById(`item-${selectedItem}`)
+      ?.classList.remove("selected");
   }
 
   selectedItem = id;
@@ -478,28 +312,16 @@ function selectItem(id) {
   document.querySelectorAll(".qty-control input").forEach((input) => {
     input.value = 1;
   });
-
-  removeAllSelectedSummaries();
-  updateSelectedItemSummary();
 }
 
 function toggleVariant(itemId, variantId, btn) {
   const item = findItem(itemId);
   if (!item?.variants) return;
 
-  const variant = item.variants.find((v) => {
-    const id = v.variant_id || v.id;
-    return id === variantId;
-  });
-
+  const variant = item.variants.find((v) => v.variant_id === variantId);
   if (!variant) return;
 
-  selectedVariant = {
-    ...variant,
-    variant_id: variant.variant_id || variant.id,
-    variant_name: variant.variant_name || variant.label || variant.name || variantId,
-    price_delta_cents: Number(variant.price_delta_cents || 0) || 0,
-  };
+  selectedVariant = variant;
 
   const itemEl = document.getElementById(`item-${itemId}`);
   itemEl?.querySelectorAll(".variant-btn").forEach((button) => {
@@ -507,47 +329,28 @@ function toggleVariant(itemId, variantId, btn) {
   });
 
   btn.classList.add("active");
-  updateSelectedItemSummary();
 }
 
 function toggleMod(groupKey, modId, btn) {
   const item = findItem(selectedItem);
   if (!item?.modifiers?.[groupKey]) return;
 
-  const option = item.modifiers[groupKey].find((opt) => getModifierId(opt) === modId);
+  const option = item.modifiers[groupKey].find(
+    (opt) => (opt.mod_id || opt.code) === modId,
+  );
 
   if (!option) return;
 
-  const itemId = getCanonicalItemId(item);
-  const groupId = resolveGroupId(itemId, groupKey, option);
+  const groupId = option.group_id || groupKey;
   const rule = getGroupRule(groupId, option.group_type);
-
-  const normalizedOption = {
-    ...option,
-    group: groupKey,
-    group_key: groupKey,
-    group_id: groupId,
-    group_type: option.group_type || null,
-
-    mod_id: option.mod_id || option.code || option.id,
-    code: option.code || option.mod_id || option.id,
-
-    mod_name: option.mod_name || option.label || option.name,
-    label: option.label || option.mod_name || option.name,
-
-    price: normalizeModifierPrice(option),
-    price_cents: normalizeModifierPrice(option),
-    price_delta_cents: normalizeModifierPrice(option),
-  };
 
   if (!selectedModifiers[groupKey]) {
     selectedModifiers[groupKey] = [];
   }
 
   const selectedList = selectedModifiers[groupKey];
-
   const existingIndex = selectedList.findIndex(
-    (selected) => getModifierId(selected) === modId,
+    (selected) => (selected.mod_id || selected.code) === modId,
   );
 
   if (existingIndex >= 0) {
@@ -555,7 +358,6 @@ function toggleMod(groupKey, modId, btn) {
     btn.classList.remove("active");
     updateModifierCounter(groupKey, rule);
     updateModifierDisabledState(groupKey, rule);
-    updateSelectedItemSummary();
     return;
   }
 
@@ -576,19 +378,20 @@ function toggleMod(groupKey, modId, btn) {
     return;
   }
 
-  selectedList.push(normalizedOption);
+  selectedList.push({ ...option, group: groupKey });
   btn.classList.add("active");
 
   updateModifierCounter(groupKey, rule);
   updateModifierDisabledState(groupKey, rule);
-  updateSelectedItemSummary();
 }
 
 function updateModifierCounter(groupKey, rule) {
   if (!selectedItem) return;
 
   const selectedCount = selectedModifiers[groupKey]?.length || 0;
-  const counter = document.getElementById(`counter-${selectedItem}-${groupKey}`);
+  const counter = document.getElementById(
+    `counter-${selectedItem}-${groupKey}`,
+  );
 
   if (!counter) return;
 
@@ -626,96 +429,6 @@ function changeQty(delta) {
     const input = document.getElementById(`qty-${selectedItem}`);
     if (input) input.value = itemQty;
   }
-
-  updateSelectedItemSummary();
-}
-
-function removeAllSelectedSummaries() {
-  document.querySelectorAll(".selected-summary").forEach((summary) => {
-    summary.remove();
-  });
-}
-
-function updateSelectedItemSummary() {
-  if (!selectedItem) return;
-
-  const item = findItem(selectedItem);
-  const itemEl = document.getElementById(`item-${selectedItem}`);
-  if (!item || !itemEl) return;
-
-  let summary = itemEl.querySelector(".selected-summary");
-
-  if (!summary) {
-    summary = document.createElement("div");
-    summary.className = "selected-summary";
-    summary.style.marginTop = "12px";
-    summary.style.padding = "10px";
-    summary.style.border = "1px dashed var(--border)";
-    summary.style.borderRadius = "var(--radius-sm)";
-    summary.style.background = "#fff";
-    summary.style.fontSize = "12px";
-
-    const actions = itemEl.querySelector(".item-actions");
-    if (actions) {
-      actions.parentNode.insertBefore(summary, actions);
-    }
-  }
-
-  const mods = Object.values(selectedModifiers).flat();
-
-  const variantDelta = selectedVariant
-    ? Number(selectedVariant.price_delta_cents || 0)
-    : 0;
-
-  const modsTotal = mods.reduce((sum, mod) => {
-    return sum + normalizeModifierPrice(mod);
-  }, 0);
-
-  const base = getBasePriceCents(item);
-  const qtyInput = document.getElementById(`qty-${selectedItem}`);
-  const qty = qtyInput
-    ? Math.max(1, Math.min(10, parseInt(qtyInput.value, 10) || 1))
-    : itemQty;
-
-  const unitTotal = base + variantDelta + modsTotal;
-  const lineTotal = unitTotal * qty;
-
-  const modHtml = mods.length
-    ? mods
-        .map((mod) => {
-          const price = normalizeModifierPrice(mod);
-          return `
-            <div>
-              • ${escapeHtml(mod.label || mod.mod_name || mod.mod_id)}
-              ${price > 0 ? `+$${formatPrice(price)}` : ""}
-            </div>
-          `;
-        })
-        .join("")
-    : `<div style="color:var(--text-light);">No modifiers selected.</div>`;
-
-  const variantHtml = selectedVariant
-    ? `
-      <div>
-        • ${escapeHtml(selectedVariant.variant_name || selectedVariant.label || selectedVariant.variant_id)}
-        ${variantDelta > 0 ? `+$${formatPrice(variantDelta)}` : ""}
-      </div>
-    `
-    : "";
-
-  summary.innerHTML = `
-    <div style="font-weight:700;color:var(--ud-primary);margin-bottom:6px;">
-      Selected Options
-    </div>
-    ${variantHtml}
-    ${modHtml}
-    <div style="margin-top:8px;font-weight:700;color:var(--ud-accent);">
-      Current Unit Price: $${formatPrice(unitTotal)}
-    </div>
-    <div style="font-size:11px;color:var(--text-light);margin-top:2px;">
-      Qty ${qty} · Line Total: $${formatPrice(lineTotal)}
-    </div>
-  `;
 }
 
 // ===================== VALIDATION =====================
@@ -736,8 +449,7 @@ function validateBeforeAdd(item) {
       if (!Array.isArray(options) || options.length === 0) continue;
 
       const first = options[0];
-      const itemId = getCanonicalItemId(item);
-      const groupId = resolveGroupId(itemId, groupKey, first);
+      const groupId = first.group_id || groupKey;
       const rule = getGroupRule(groupId, first.group_type);
       const selectedCount = selectedModifiers[groupKey]?.length || 0;
 
@@ -773,8 +485,6 @@ function addToCart(id) {
 
   if (!validateBeforeAdd(item)) return;
 
-  const itemId = getCanonicalItemId(item);
-
   const qtyInput = document.getElementById(`qty-${id}`);
   const qty = qtyInput
     ? Math.max(1, Math.min(10, parseInt(qtyInput.value, 10) || 1))
@@ -782,22 +492,20 @@ function addToCart(id) {
 
   const mods = Object.values(selectedModifiers).flat();
 
-  const basePrice = getBasePriceCents(item);
-
   const variantPrice = selectedVariant
     ? Number(selectedVariant.price_delta_cents || 0)
     : 0;
 
   const modPrice = mods.reduce((sum, mod) => {
-    return sum + normalizeModifierPrice(mod);
+    return sum + Number(mod.price_delta_cents ?? mod.price ?? 0);
   }, 0);
 
-  const unitPrice = basePrice + variantPrice + modPrice;
+  const unitPrice = Number(item.price || 0) + variantPrice + modPrice;
   const totalPrice = unitPrice * qty;
 
   cart.push({
-    id: itemId,
-    item_id: itemId,
+    id: item.id,
+    item_id: item.item_id || item.id,
     name: item.name,
 
     variant_id: selectedVariant?.variant_id || null,
@@ -808,35 +516,21 @@ function addToCart(id) {
     qty,
     quantity: qty,
 
-    price: basePrice,
-    base_price_cents: basePrice,
+    price: Number(item.price || 0),
     unitPrice,
-    unit_total_cents: unitPrice,
     totalPrice,
-    line_total_cents: totalPrice,
 
-    modifiers: mods.map((mod) => {
-      const groupKey = mod.group || mod.group_key || null;
-      const groupId = resolveGroupId(itemId, groupKey, mod);
-      const price = normalizeModifierPrice(mod);
-
-      return {
-        group: groupKey,
-        group_key: groupKey,
-        group_id: groupId,
-        group_type: mod.group_type || null,
-
-        code: mod.code || mod.mod_id,
-        mod_id: mod.mod_id || mod.code,
-
-        label: mod.label || mod.mod_name,
-        mod_name: mod.mod_name || mod.label,
-
-        price,
-        price_cents: price,
-        price_delta_cents: price,
-      };
-    }),
+    modifiers: mods.map((mod) => ({
+      group: mod.group || null,
+      group_id: mod.group_id || null,
+      group_type: mod.group_type || null,
+      code: mod.code || mod.mod_id,
+      mod_id: mod.mod_id || mod.code,
+      label: mod.label || mod.mod_name,
+      mod_name: mod.mod_name || mod.label,
+      price: Number(mod.price_delta_cents ?? mod.price ?? 0),
+      price_delta_cents: Number(mod.price_delta_cents ?? mod.price ?? 0),
+    })),
   });
 
   if (qtyInput) qtyInput.value = 1;
@@ -848,7 +542,6 @@ function addToCart(id) {
   selectedModifiers = {};
   itemQty = 1;
 
-  removeAllSelectedSummaries();
   updateCart();
   showAlert("success", `${item.name} added to your order!`);
 }
@@ -863,40 +556,48 @@ function updateCart() {
   const content = document.getElementById("cartContent");
   const checkoutPanel = document.getElementById("checkoutPanel");
 
-  if (!badge || !content) return;
-
-  const modPriceLabel = (m) => {
-    const price = normalizeModifierPrice(m);
-    return price > 0 ? ` (+$${formatPrice(price)})` : "";
-  };
-
-  const totalQty = cart.reduce((s, i) => s + Number(i.qty || i.quantity || 0), 0);
+  const totalQty = cart.reduce((sum, item) => sum + item.qty, 0);
 
   if (totalQty === 0) {
-    badge.style.display = "none";
-    content.innerHTML = `
-      <div class="cart-empty">
-        <div class="emoji">🛒</div>
-        <p>Your cart is empty.<br>Select an item to get started.</p>
-      </div>
-    `;
+    if (badge) badge.style.display = "none";
+    if (checkoutPanel) checkoutPanel.style.display = "block";
+
+    if (content) {
+      content.innerHTML = `
+        <div class="cart-empty">
+          <div class="emoji">🛒</div>
+          <p>Your cart is empty.<br>Select an item to get started.</p>
+        </div>
+      `;
+    }
+
     return;
   }
 
-  badge.style.display = "flex";
-  badge.textContent = totalQty;
+  if (badge) {
+    badge.style.display = "flex";
+    badge.textContent = totalQty;
+  }
 
   if (checkoutPanel) checkoutPanel.style.display = "block";
 
-  const subtotal = cart.reduce((s, i) => s + Number(i.totalPrice || i.line_total_cents || 0), 0);
+  const subtotal = cart.reduce((sum, item) => sum + item.totalPrice, 0);
   const tax = Math.round(subtotal * TAX_RATE);
   const grand = subtotal + tax;
 
+  if (!content) return;
+
   content.innerHTML = `
     ${cart
-      .map((item, idx) => {
-        const comboMods = item.modifiers.filter(isComboModifier);
-        const otherMods = item.modifiers.filter((m) => !isComboModifier(m));
+      .map((item, index) => {
+        const comboMods = item.modifiers.filter((modifier) =>
+          String(modifier.mod_id || modifier.code || "").includes("COMBO"),
+        );
+
+        const otherMods = item.modifiers.filter(
+          (modifier) =>
+            !String(modifier.mod_id || modifier.code || "").includes("COMBO"),
+        );
 
         return `
           <div class="cart-item">
@@ -905,16 +606,19 @@ function updateCart() {
 
               ${
                 item.variant_name
+                  ? `<div class="cart-mods"><span class="cart-mod-tag">${escapeHtml(item.variant_name)}</span></div>`
+                  : ""
+              }
+
+              ${
+                comboMods.length
                   ? `
-                    <div class="cart-mods">
-                      <span class="cart-mod-tag">
-                        ${escapeHtml(item.variant_name)}
-                        ${
-                          Number(item.variant_price_delta_cents || 0) > 0
-                            ? ` (+$${formatPrice(item.variant_price_delta_cents)})`
-                            : ""
-                        }
-                      </span>
+                    <div class="cart-combo">
+                      🍟 COMBO: ${comboMods
+                        .map((modifier) =>
+                          escapeHtml(modifier.label || modifier.mod_name),
+                        )
+                        .join(" + ")}
                     </div>
                   `
                   : ""
@@ -925,41 +629,36 @@ function updateCart() {
                   ? `
                     <div class="cart-mods">
                       ${otherMods
-                        .map(
-                          (m) =>
-                            `<span class="cart-mod-tag">${escapeHtml(m.label || m.mod_name)}${modPriceLabel(m)}</span>`,
-                        )
+                        .map((modifier) => {
+                          const price = Number(
+                            modifier.price_delta_cents || modifier.price || 0,
+                          );
+                          return `
+                            <span class="cart-mod-tag">
+                              ${escapeHtml(modifier.label || modifier.mod_name)}
+                              ${price > 0 ? ` (+$${formatPrice(price)})` : ""}
+                            </span>
+                          `;
+                        })
                         .join(" ")}
                     </div>
                   `
                   : ""
               }
 
-              ${
-                comboMods.length
-                  ? `
-                    <div class="cart-combo">
-                      🍟 COMBO: ${comboMods
-                        .map((m) => {
-                          const price = normalizeModifierPrice(m);
-                          return `${escapeHtml(
-                            String(m.label || m.mod_name || "").replace("Add ", ""),
-                          )}${price > 0 ? ` (+$${formatPrice(price)})` : ""}`;
-                        })
-                        .join(" + ")}
-                    </div>
-                  `
-                  : ""
-              }
-
               <div style="font-size:11px;color:var(--text-light);margin-top:4px;">
-                Unit: $${formatPrice(item.unitPrice || item.unit_total_cents)} × ${item.qty}
+                Unit: $${formatPrice(item.unitPrice)} × ${item.qty}
               </div>
             </div>
 
             <div style="display:flex;align-items:center;gap:12px">
-              <div class="cart-item-price">$${formatPrice(item.totalPrice || item.line_total_cents)}</div>
-              <button onclick="removeFromCart(${idx})" style="background:none;border:none;cursor:pointer;font-size:16px;color:var(--text-light)">🗑️</button>
+              <div class="cart-item-price">$${formatPrice(item.totalPrice)}</div>
+              <button
+                onclick="removeFromCart(${index})"
+                style="background:none;border:none;cursor:pointer;font-size:16px;color:var(--text-light)"
+              >
+                🗑️
+              </button>
             </div>
           </div>
         `;
@@ -967,9 +666,12 @@ function updateCart() {
       .join("")}
 
     <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">
-      <label style="display:block;font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px;">Special Instructions</label>
+      <label style="display:block;font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px;">
+        Special Instructions
+      </label>
       <textarea
         id="cartNotes"
+        name="special_instructions"
         style="width:100%;padding:8px 10px;border:1.5px solid var(--input-border);border-radius:var(--radius-sm);font-size:13px;font-family:inherit;min-height:60px;resize:vertical;"
         placeholder="Allergies, dietary needs, extra requests..."
       ></textarea>
@@ -1014,7 +716,6 @@ function isDeliOpen(pickupTime) {
   const cst = new Date(
     now.toLocaleString("en-US", { timeZone: HOURS.timezone }),
   );
-
   const dayNames = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
   const today = dayNames[cst.getDay()];
   const hours = HOURS[today];
@@ -1051,7 +752,6 @@ function populatePickupTimes() {
   const cst = new Date(
     now.toLocaleString("en-US", { timeZone: HOURS.timezone }),
   );
-
   const dayNames = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
   const today = dayNames[cst.getDay()];
   const hours = HOURS[today];
@@ -1131,23 +831,19 @@ async function submitOrder() {
   }
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
   if (!emailRegex.test(email)) {
     showAlert("error", "Please enter a valid email address.");
     return;
   }
 
   const phoneDigits = phone.replace(/\D/g, "");
-
   if (phoneDigits.length < 10 || phoneDigits.length > 11) {
     showAlert("error", "Please enter a valid 10-digit phone number.");
     return;
   }
-
   phone = phoneDigits;
 
   const hoursCheck = isDeliOpen(pickupTime);
-
   if (!hoursCheck.open) {
     showAlert("error", hoursCheck.message);
     return;
@@ -1158,63 +854,35 @@ async function submitOrder() {
     btn.innerHTML = '<span class="spinner"></span> Sending...';
   }
 
-  const subtotal = cart.reduce(
-    (sum, item) => sum + Number(item.totalPrice || item.line_total_cents || 0),
-    0,
-  );
-
+  const subtotal = cart.reduce((sum, item) => sum + item.totalPrice, 0);
   const tax = Math.round(subtotal * TAX_RATE);
   const total = subtotal + tax;
 
   const payload = {
-    source: "pickup-order",
-
-    customer: {
-      name: customerName,
-      email,
-      phone,
-    },
-
-    items: cart.map((cartItem) => ({
-      item_id: cartItem.item_id,
-      id: cartItem.item_id,
-
-      variant_id: cartItem.variant_id || null,
-
-      name: cartItem.name,
-
-      quantity: cartItem.quantity || cartItem.qty,
-      qty: cartItem.quantity || cartItem.qty,
-
-      base_price_cents: cartItem.price || cartItem.base_price_cents || 0,
-
-      modifiers: cartItem.modifiers.map((modifier) => {
-        const price = normalizeModifierPrice(modifier);
-
-        return {
-          mod_id: modifier.mod_id,
-          code: modifier.code || modifier.mod_id,
-
+    body: {
+      source: "pickup-order",
+      customer: {
+        name: customerName,
+        email,
+        phone,
+      },
+      items: cart.map((cartItem) => ({
+        item_id: cartItem.item_id,
+        variant_id: cartItem.variant_id || null,
+        quantity: cartItem.qty,
+        modifiers: cartItem.modifiers.map((modifier) => ({
           group_id: modifier.group_id,
-          group: modifier.group,
-
-          label: modifier.label || modifier.mod_name || "Unknown",
-          mod_name: modifier.mod_name || modifier.label || "Unknown",
-
-          price_cents: price,
-          price_delta_cents: price,
-        };
-      }),
-    })),
-
-    subtotal_cents: subtotal,
-    frontend_subtotal_cents: subtotal,
-    tax_cents: tax,
-    total_cents: total,
-    frontend_total_cents: total,
-
-    notes: specialInstructions || "",
-    pickup_time: pickupTime || "25-30 mins",
+          mod_id: modifier.mod_id,
+        })),
+      })),
+      totals: {
+        subtotal_cents: subtotal,
+        tax_cents: tax,
+        total_cents: total,
+      },
+      notes: specialInstructions || "",
+      pickup_time: pickupTime || "25-30 mins",
+    },
   };
 
   console.log("Canonical webhook payload:", payload);
@@ -1270,33 +938,44 @@ async function submitOrder() {
 }
 
 // ===================== CONFIRMATION =====================
-function showConfirmation(message, squareLink) {
-  document.querySelector(".main").style.display = "none";
-  document.querySelector(".hero").style.display = "none";
+function showConfirmation(message, paymentLink) {
+  const main = document.querySelector(".main");
+  const hero = document.querySelector(".hero");
+
+  if (main) main.style.display = "none";
+  if (hero) hero.style.display = "none";
 
   const existing = document.getElementById("confirmationPage");
   if (existing) existing.remove();
 
-  const modPriceLabel = (m) => {
-    const price = normalizeModifierPrice(m);
-    return price > 0 ? ` (+$${formatPrice(price)})` : "";
-  };
-
-  const subtotal = cart.reduce(
-    (s, i) => s + Number(i.totalPrice || i.line_total_cents || 0),
-    0,
-  );
-
+  const subtotal = cart.reduce((sum, item) => sum + item.totalPrice, 0);
   const tax = Math.round(subtotal * TAX_RATE);
   const grand = subtotal + tax;
 
-  const customerName =
-    document.querySelector('input[name="name"]')?.value?.trim() || "";
-
   const orderItemsHtml = cart
     .map((item) => {
-      const comboMods = item.modifiers.filter(isComboModifier);
-      const otherMods = item.modifiers.filter((m) => !isComboModifier(m));
+      const comboMods = item.modifiers.filter(
+        (m) =>
+          m.group_key === "combo" ||
+          m.group === "combo" ||
+          String(m.group_id || "").includes("_COMBO") ||
+          String(m.mod_id || "").includes("COMBO"),
+      );
+
+      const otherMods = item.modifiers.filter(
+        (m) =>
+          !(
+            m.group_key === "combo" ||
+            m.group === "combo" ||
+            String(m.group_id || "").includes("_COMBO") ||
+            String(m.mod_id || "").includes("COMBO")
+          ),
+      );
+
+      const modPriceLabel = (m) => {
+        const price = Number(m.price_delta_cents ?? m.price ?? 0);
+        return price > 0 ? ` (+$${formatPrice(price)})` : "";
+      };
 
       return `
         <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #eee;">
@@ -1305,14 +984,7 @@ function showConfirmation(message, squareLink) {
 
             ${
               item.variant_name
-                ? `<div style="color:#6B7280;font-size:12px;margin-top:2px;">
-                    ${escapeHtml(item.variant_name)}
-                    ${
-                      Number(item.variant_price_delta_cents || 0) > 0
-                        ? ` (+$${formatPrice(item.variant_price_delta_cents)})`
-                        : ""
-                    }
-                  </div>`
+                ? `<div style="color:#6B7280;font-size:12px;margin-top:2px;">${escapeHtml(item.variant_name)}</div>`
                 : ""
             }
 
@@ -1320,12 +992,9 @@ function showConfirmation(message, squareLink) {
               comboMods.length
                 ? `<div style="color:#AF3D4B;font-size:12px;margin-top:2px;">
                     🍟 COMBO: ${comboMods
-                      .map((m) => {
-                        const price = normalizeModifierPrice(m);
-                        return `${escapeHtml(
-                          String(m.label || m.mod_name || "").replace("Add ", ""),
-                        )}${price > 0 ? ` (+$${formatPrice(price)})` : ""}`;
-                      })
+                      .map((m) =>
+                        `${escapeHtml(String(m.label || m.mod_name || "").replace("Add ", ""))}${modPriceLabel(m)}`,
+                      )
                       .join(" + ")}
                   </div>`
                 : ""
@@ -1335,19 +1004,21 @@ function showConfirmation(message, squareLink) {
               otherMods.length
                 ? `<div style="color:#6B7280;font-size:12px;margin-top:2px;">
                     ${otherMods
-                      .map((m) => `${escapeHtml(m.label || m.mod_name)}${modPriceLabel(m)}`)
+                      .map((m) =>
+                        `${escapeHtml(m.label || m.mod_name)}${modPriceLabel(m)}`,
+                      )
                       .join(" • ")}
                   </div>`
                 : ""
             }
 
             <div style="font-size:11px;color:#9CA3AF;margin-top:3px;">
-              Unit: $${formatPrice(item.unitPrice || item.unit_total_cents)} × ${item.qty}
+              Unit: $${formatPrice(item.unitPrice)} × ${item.qty}
             </div>
           </div>
 
           <span style="font-weight:700;color:#AF3D4B;font-size:14px;white-space:nowrap;">
-            $${formatPrice(item.totalPrice || item.line_total_cents)}
+            $${formatPrice(item.totalPrice)}
           </span>
         </div>
       `;
@@ -1365,17 +1036,6 @@ function showConfirmation(message, squareLink) {
         <p style="font-size:16px;opacity:0.9;margin:0;">We've received your order.</p>
       </div>
 
-      <div style="text-align:center;margin-bottom:20px;">
-        <div style="display:inline-block;background:#f5e6d0;color:#590B3F;padding:10px 18px;border-radius:8px;font-weight:700;font-size:14px;">
-          📋 Order for ${escapeHtml(customerName || "You")}
-        </div>
-      </div>
-
-      <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #eee;">
-        <span style="color:#6B7280;font-size:14px;">Pickup Time</span>
-        <span style="font-weight:600;font-size:14px;">25 - 30 mins</span>
-      </div>
-
       <h3 style="font-size:16px;font-weight:700;color:#590B3F;margin:20px 0 12px 0;">Your Order</h3>
       ${orderItemsHtml}
 
@@ -1385,7 +1045,7 @@ function showConfirmation(message, squareLink) {
           <span>$${formatPrice(subtotal)}</span>
         </div>
         <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:14px;color:#6B7280;">
-          <span>Tax (9.52%)</span>
+          <span>Tax (est. 9.52%)</span>
           <span>$${formatPrice(tax)}</span>
         </div>
         <div style="display:flex;justify-content:space-between;padding:8px 0;margin-top:8px;border-top:1px solid #eee;font-weight:800;font-size:18px;color:#590B3F;">
@@ -1395,25 +1055,18 @@ function showConfirmation(message, squareLink) {
       </div>
 
       <div style="text-align:center;margin-top:24px;">
-        <p style="font-size:14px;color:#374151;margin-bottom:18px;line-height:1.6;font-weight:600;">
-          ${escapeHtml(message || "We got you! Click the payment link below to complete your secure payment.")}
-        </p>
-
         ${
-          squareLink
-            ? `" target="_blank" style="display:inline-block;background:#AF3D4B;color:#fff;padding:16px 40px;border-radius:50px;font-weight:700;font-size:16px;text-decoration:none;transition:all 0.2s;">💳 Complete Payment</a>`
+          paymentLink
+            ? `" target="_blank" style="display:inline-block;background:#AF3D4B;color:#fff;padding:16px 40px;border-radius:50px;font-weight:700;font-size:16px;text-decoration:none;">💳 Complete Payment</a>`
             : ""
         }
 
-        <p style="font-size:12px;color:#6B7280;margin-top:16px;line-height:1.5;">
-          Payment links expire at 2:00 AM CT. Didn't receive the email? Check spam or call us.
+        <p style="font-size:14px;color:#374151;margin-top:20px;line-height:1.6;font-weight:600;">
+          ${escapeHtml(message)}
         </p>
 
-        <p style="font-size:12px;color:#9CA3AF;">
-          Questions? Call us at
-          tel:${String(window.BRAND?.phone || replace(/[^0-9]/g, "")}" style="color:#590B3F;text-decoration:none;font-weight:600;">
-            ${escapeHtml(window.BRAND?.phone || "(501) 551-5944")}
-          </a>.
+        <p style="font-size:12px;color:#6B7280;margin-top:12px;line-height:1.5;">
+          Payment links expire at 2:00 AM CT. Didn't receive the email? Check spam or call us.
         </p>
       </div>
     </div>
@@ -1455,7 +1108,6 @@ function checkHours() {
   const cst = new Date(
     now.toLocaleString("en-US", { timeZone: HOURS.timezone }),
   );
-
   const day = cst.getDay();
   const hour = cst.getHours();
   const min = cst.getMinutes();
