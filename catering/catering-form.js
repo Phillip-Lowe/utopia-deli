@@ -61,7 +61,9 @@
   ];
 
   const DRINKS = [
+    /* TEMPORARILY REMOVED — Out of stock
     { id: 'cold-pressed-juice', name: 'Fresh Cold-Pressed Juice', calories: 120, price: 500, photo: 'images/cold_pressed_juice_v2.jpg', desc: '10 oz — Pineapple, Honeycrisp Apple, Lemon' }
+    */
   ];
 
   const MEALS_PER_PACKAGE = 7;

@@ -445,6 +445,7 @@
         },
       },
 
+      /* TEMPORARILY REMOVED — Out of stock
       {
         id: "JUICE_CP",
         item_id: "JUICE_CP",
@@ -491,6 +492,7 @@
           ],
         },
       },
+      */
 
       {
         id: "COOKIES_2",
